@@ -1,6 +1,6 @@
 The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed.
 
-`install-package FluffySpoon.AspNet.LetsEncrypt`
+`Install-Package FluffySpoon.AspNet.LetsEncrypt`
 
 # Requirements
 - Kestrel (which is default)
