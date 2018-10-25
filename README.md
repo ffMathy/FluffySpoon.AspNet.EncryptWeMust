@@ -18,7 +18,7 @@ It can be enabled using __just one__ the following techniques:
 # Usage example
 If you want to try it yourself, you can also browse the sample project code here:
 
-https://github.com/ffMathy/FluffySpoon.AspNet/tree/master/src/FluffySpoon.AspNet.LetsEncrypt.Sample
+https://github.com/ffMathy/FluffySpoon.AspNet.LetsEncrypt/tree/master/src/FluffySpoon.AspNet.LetsEncrypt.Sample
 
 ## Configure the services
 Add the following code to your `Startup` class' `ConfigureServices` method with real values instead of the sample values:
