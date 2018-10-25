@@ -10,7 +10,7 @@ The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration
 ## Getting an always-on app pool
 This is required because the renewal job runs on a background thread and polls once every hour to see if the certificate needs renewal (this is a very cheap operation). 
 
-It can be enabled using *just one* the following techniques:
+It can be enabled using __just one__ the following techniques:
 - Enabling Always On if using Azure App Service.
 - Setting `StartMode` of the app pool to `AlwaysRunning` if using IIS.
 - Hosting your ASP .NET Core application as a Windows Service.
