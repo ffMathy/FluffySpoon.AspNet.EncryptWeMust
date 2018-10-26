@@ -137,3 +137,4 @@ services.AddFluffySpoonRenewalLifecycleHook<MyLifecycleHook>();
 Yes, really. This even works in an Azure App Service - technically any host that can host ASP .NET Core 2.1 applications can use this without issues.
 
 I got tired of disappointing Azure support for LetsEncrypt, which currently requires a plugin and potentially hours of fiddling around just to get it working.
+ 
