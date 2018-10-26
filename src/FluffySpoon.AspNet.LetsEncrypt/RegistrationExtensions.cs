@@ -7,6 +7,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions
 	{
+		public static void AddFluffySpoonRenewalLifecycleHook<TCertificateRenewalLifecycleHook>(
+			this IServiceCollection services) where TCertificateRenewalLifecycleHook : class, ICertificateRenewalLifecycleHook
+		{
+			services.AddSingleton<ICertificateRenewalLifecycleHook, TCertificateRenewalLifecycleHook>();
+		}
+
 		public static void AddFluffySpoonLetsEncryptPersistence(
 			this IServiceCollection services,
 			Func<byte[], Task> persistAsync,

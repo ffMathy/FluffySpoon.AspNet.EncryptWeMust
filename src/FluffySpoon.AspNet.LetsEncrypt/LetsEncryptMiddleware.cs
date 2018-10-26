@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
-using Certes;
-using Certes.Acme;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -15,14 +9,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 	public class LetsEncryptMiddleware
 	{
 		private readonly RequestDelegate _next;
-		private readonly LetsEncryptOptions _options;
 		private readonly ILogger<LetsEncryptMiddleware> _logger;
 		private readonly LetsEncryptCertificateContainer _stateContainer;
 
-		private readonly HashSet<string> _domainsForFastLookup;
-
 		public LetsEncryptMiddleware(
-			RequestDelegate next, 
+			RequestDelegate next,
 			LetsEncryptOptions options,
 			ILogger<LetsEncryptMiddleware> logger,
 			LetsEncryptCertificateContainer stateContainer)
@@ -37,11 +28,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				throw new ArgumentNullException(nameof(options), "You must provide a certificate signing request to use for LetsEncrypt.");
 
 			_next = next;
-			_options = options;
 			_logger = logger;
 			_stateContainer = stateContainer;
-
-			_domainsForFastLookup = new HashSet<string>(options.Domains);
 		}
 
 		public async Task InvokeAsync(
@@ -55,7 +43,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				_logger.LogDebug("Challenge invoked: {0}", path);
 
 				var requestedToken = path.Substring(magicPrefix.Length);
-				var matchingChallenge = _stateContainer.PendingChallengeContexts.FirstOrDefault(x => x.Token == requestedToken);
+				var matchingChallenge = _stateContainer.PendingChallengeContexts?.FirstOrDefault(x => x.Token == requestedToken);
 				if (matchingChallenge == null)
 				{
 					_logger.LogInformation("The given challenge did not match: {0}", path);

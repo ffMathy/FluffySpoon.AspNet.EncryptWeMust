@@ -1,20 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using Certes;
-using Certes.Acme;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Https.Internal;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.X509;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 {
