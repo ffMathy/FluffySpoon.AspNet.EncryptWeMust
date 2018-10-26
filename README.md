@@ -23,6 +23,8 @@ https://github.com/ffMathy/FluffySpoon.AspNet.LetsEncrypt/tree/master/src/Fluffy
 ## Configure the services
 Add the following code to your `Startup` class' `ConfigureServices` method with real values instead of the sample values:
 
+_Note that you can set either `TimeAfterIssueDateBeforeRenewal`, `TimeAfterIssueDateBeforeRenewal` or both, but at least one of them has to be specified._
+
 ```csharp
 services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 {
@@ -30,6 +32,7 @@ services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 	UseStaging = false, //switch to true for testing
 	Domains = new[] { DomainToUse },
 	TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30), //renew automatically 30 days before expiry
+	TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7), //renew automatically 7 days after the last certificate was issued
 	CertificateSigningRequest = new CsrInfo() //these are your certificate details
 	{
 		CountryName = "Denmark",
@@ -101,6 +104,33 @@ class Certificate {
 services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
 	async (databaseContext, bytes) => databaseContext.Certificates.Add(new Certificate() { Bytes = bytes }),
 	async (databaseContext) => databaseContext.Certificates.Single());
+```
+
+# Hooking into events
+You can register a an `ICertificateRenewalLifecycleHook` implementation which does something when certain events occur, as shown below. This can be useful if you need to notify a Slack channel or send an e-mail if an error occurs, or when the certificate has indeed been renewed.
+
+```csharp
+class MyLifecycleHook : ICertificateRenewalLifecycleHook {
+	public async Task OnStartAsync() {
+		//when the renewal background job has started.
+	}
+
+	public async Task OnStopAsync() {
+		//when the renewal background job (or the application) has stopped.
+		//this is not guaranteed to fire in critical application crash scenarios.
+	}
+
+	public async Task OnRenewalSucceededAsync() {
+		//when the renewal has completed.
+	}
+
+	public async Task OnExceptionAsync(Exception error) {
+		//when an error happened during the renewal process.
+	}
+}
+
+//this is how to wire up the hook.
+services.AddFluffySpoonRenewalLifecycleHook<MyLifecycleHook>();
 ```
 
 # Really?
