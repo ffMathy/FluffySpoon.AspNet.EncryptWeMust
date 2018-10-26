@@ -23,7 +23,7 @@ https://github.com/ffMathy/FluffySpoon.AspNet.LetsEncrypt/tree/master/src/Fluffy
 ## Configure the services
 Add the following code to your `Startup` class' `ConfigureServices` method with real values instead of the sample values:
 
-_Note that you can set either `TimeAfterIssueDateBeforeRenewal`, `TimeAfterIssueDateBeforeRenewal` or both, but at least one of them has to be specified._
+_Note that you can set either `TimeUntilExpiryBeforeRenewal`, `TimeAfterIssueDateBeforeRenewal` or both, but at least one of them has to be specified._
 
 ```csharp
 services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
