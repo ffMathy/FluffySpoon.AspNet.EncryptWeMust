@@ -103,7 +103,7 @@ class Certificate {
 //we only have to instruct how to add the certificate - `databaseContext.SaveChangesAsync()` is automatically called.
 services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
 	async (databaseContext, bytes) => databaseContext.Certificates.Add(new Certificate() { Bytes = bytes }),
-	async (databaseContext) => databaseContext.Certificates.Single());
+	async (databaseContext) => databaseContext.Certificates.SingleOrDefault()?.Bytes);
 ```
 
 # Hooking into events
