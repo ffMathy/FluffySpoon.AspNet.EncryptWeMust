@@ -130,7 +130,7 @@ class MyLifecycleHook : ICertificateRenewalLifecycleHook {
 }
 
 //this is how to wire up the hook.
-services.AddFluffySpoonRenewalLifecycleHook<MyLifecycleHook>();
+services.AddFluffySpoonLetsEncryptRenewalLifecycleHook<MyLifecycleHook>();
 ```
 
 # Really?
