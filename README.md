@@ -71,7 +71,7 @@ WebHost.CreateDefaultBuilder(args)
 
 Tada! Your application now supports SSL via LetsEncrypt, even from the first HTTPS request. It will even renew your certificate automatically in the background.
 
-# Configuring persistence
+# Optional: Configuring persistence
 Persistence tells the middleware how to persist and retrieve the certificate, so that if the server restarts, the certificate can be re-used without generating a new one.
 
 A certificate has a _key_ to distinguish between certificates, since there is both an account certificate and a site certificate that needs to be stored.
@@ -105,10 +105,22 @@ class Certificate {
 
 //we only have to instruct how to add the certificate - `databaseContext.SaveChangesAsync()` is automatically called.
 services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
-	async (databaseContext, key, bytes) => databaseContext.Certificates.Add(new Certificate() { 
-		Bytes = bytes,
-		Key = key
-	}),
+	async (databaseContext, key, bytes) =>
+	{
+		var existingCertificate = databaseContext.Certificates.SingleOrDefault(x => x.Key == key);
+		if (existingCertificate != null)
+		{
+			existingCertificate.Bytes = bytes;
+		}
+		else
+		{
+			databaseContext.Certificates.Add(new Certificate()
+			{
+				Key = key,
+				Bytes = bytes
+			});
+		}
+	},
 	async (databaseContext, key) => databaseContext
 		.Certificates
 		.SingleOrDefault(x => x.Key == key)
