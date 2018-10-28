@@ -7,6 +7,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions
 	{
+		internal static bool IsLetsEncryptUsed { get; private set; }
+
 		public static void AddFluffySpoonLetsEncryptRenewalLifecycleHook<TCertificateRenewalLifecycleHook>(
 			this IServiceCollection services) where TCertificateRenewalLifecycleHook : class, ICertificateRenewalLifecycleHook
 		{
@@ -61,6 +63,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		public static void UseFluffySpoonLetsEncrypt(
 			this IApplicationBuilder app)
 		{
+			IsLetsEncryptUsed = true;
 			app.UseMiddleware<LetsEncryptMiddleware>();
 		}
 	}
