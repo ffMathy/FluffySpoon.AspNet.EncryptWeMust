@@ -159,6 +159,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
 				}
 
+				_stateContainer.PendingChallengeContexts = null;
+
 				var challengeExceptions = challenges
 					.Where(x => x.Status == ChallengeStatus.Invalid)
 					.Select(x => new Exception(x.Error.Identifier + ": " + x.Error.Detail))
@@ -167,8 +169,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					throw new OrderInvalidException(
 						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.", 
 						new AggregateException(challengeExceptions));
-
-				_stateContainer.PendingChallengeContexts = null;
 
 				_logger.LogInformation("Acquiring certificate through signing request.");
 
