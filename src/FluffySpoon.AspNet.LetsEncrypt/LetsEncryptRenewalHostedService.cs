@@ -21,6 +21,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
+
 		private readonly ILogger<LetsEncryptRenewalHostedService> _logger;
 		private readonly LetsEncryptOptions _options;
 		private readonly LetsEncryptCertificateContainer _stateContainer;
@@ -93,7 +94,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return null;
 		}
 
-		private async Task<bool> TryRetrievingValidPersistedCertificate()
+		private async Task<bool> TryRetrievingValidPersistedSiteCertificate()
 		{
 			if (_stateContainer.Certificate != null)
 				return false;
@@ -126,88 +127,27 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				if (IsCertificateValid)
 					return;
 
-				if (await TryRetrievingValidPersistedCertificate())
+				if (await TryRetrievingValidPersistedSiteCertificate())
 					return;
 
-				var letsencryptUri = _options.UseStaging
-					? WellKnownServers.LetsEncryptStagingV2
-					: WellKnownServers.LetsEncryptV2;
-				if (acme == null)
-				{
-					var existingAccountKeyBytes = await GetPersistedCertificateBytesAsync(AccountCertificateKey);
-					if(existingAccountKeyBytes != null)
-					{
-						_logger.LogDebug("Using existing LetsEncrypt account.");
-
-						var accountKey = KeyFactory.FromPem(Encoding.UTF8.GetString(existingAccountKeyBytes));
-
-						acme = new AcmeContext(letsencryptUri, accountKey);
-						await acme.Account();
-					} else { 
-						_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
-
-						acme = new AcmeContext(letsencryptUri);
-						await acme.NewAccount(_options.Email, true);
-					
-						var newAccountKeyBytes = Encoding.UTF8.GetBytes(acme.AccountKey.ToPem());
-						var accountCertificatePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(AccountCertificateKey, newAccountKeyBytes));
-						await Task.WhenAll(accountCertificatePersistenceTasks);
-					}
-				}
+				await Authenticate();
 
 				var domains = _options.Domains.ToArray();
-				_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] {domains});
-				
+				_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
+
 				var order = await acme.NewOrder(domains);
 				var allAuthorizations = await order.Authorizations();
 				var challengeContexts = await Task.WhenAll(
 					allAuthorizations.Select(x => x.Http()));
 
-				_logger.LogInformation("Validating all pending order authorizations.");
+				await ValidateChallenges(challengeContexts);
 
-				_stateContainer.PendingChallengeContexts = challengeContexts;
-
-				var challenges = await Task.WhenAll(
-					challengeContexts.Select(x => x.Validate()));
-
-				while(true) {
-					if(!challenges.Any(x => x.Status == ChallengeStatus.Pending))
-						break;
-
-					await Task.Delay(1000);
-					challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
-				}
-
-				_stateContainer.PendingChallengeContexts = null;
-
-				var challengeExceptions = challenges
-					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception(x.Error.Identifier + ": " + x.Error.Detail))
-					.ToArray();
-				if(challengeExceptions.Length > 0)
-					throw new OrderInvalidException(
-						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.", 
-						new AggregateException(challengeExceptions));
-
-				_logger.LogInformation("Acquiring certificate through signing request.");
-
-				var privateKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
-				var certificateChain = await order.Generate(
-					_options.CertificateSigningRequest,
-					privateKey);
-
-				var pfxBuilder = certificateChain.ToPfx(privateKey);
-				var pfxBytes = pfxBuilder.Build("LetsEncrypt", string.Empty);
-
-				_logger.LogInformation("Certificate acquired.");
-
-				var sitePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(SiteCertificateKey, pfxBytes));
-				await Task.WhenAll(sitePersistenceTasks);
-
-				_logger.LogInformation("Certificate persisted for later use.");
+				var pfxBytes = await AcquireCertificateBytesFromOrder(order);
+				await PersistSiteCertificate(pfxBytes);
 
 				_stateContainer.Certificate = GetCertificateFromBytes(pfxBytes);
-			} catch(Exception ex)
+			}
+			catch (Exception ex)
 			{
 				foreach (var lifecycleHook in _lifecycleHooks)
 					await lifecycleHook.OnExceptionAsync(ex);
@@ -218,6 +158,101 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			{
 				_semaphoreSlim.Release();
 			}
+		}
+
+		private async Task Authenticate()
+		{
+			var letsencryptUri = _options.UseStaging
+				? WellKnownServers.LetsEncryptStagingV2
+				: WellKnownServers.LetsEncryptV2;
+			if (acme == null)
+			{
+				var existingAccountKeyBytes = await GetPersistedCertificateBytesAsync(AccountCertificateKey);
+				if (existingAccountKeyBytes != null)
+				{
+					await UseExistingLetsEncryptAccount(letsencryptUri, existingAccountKeyBytes);
+				}
+				else
+				{
+					await CreateNewLetsEncryptAccount(letsencryptUri);
+				}
+			}
+		}
+
+		private async Task UseExistingLetsEncryptAccount(Uri letsencryptUri, byte[] existingAccountKeyBytes)
+		{
+			_logger.LogDebug("Using existing LetsEncrypt account.");
+
+			var accountKey = KeyFactory.FromPem(Encoding.UTF8.GetString(existingAccountKeyBytes));
+
+			acme = new AcmeContext(letsencryptUri, accountKey);
+			await acme.Account();
+		}
+
+		private async Task CreateNewLetsEncryptAccount(Uri letsencryptUri)
+		{
+			_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
+
+			acme = new AcmeContext(letsencryptUri);
+			await acme.NewAccount(_options.Email, true);
+
+			var newAccountKeyBytes = Encoding.UTF8.GetBytes(acme.AccountKey.ToPem());
+			var accountCertificatePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(AccountCertificateKey, newAccountKeyBytes));
+			await Task.WhenAll(accountCertificatePersistenceTasks);
+		}
+
+		private async Task PersistSiteCertificate(byte[] pfxBytes)
+		{
+			var sitePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(SiteCertificateKey, pfxBytes));
+			await Task.WhenAll(sitePersistenceTasks);
+
+			_logger.LogInformation("Certificate persisted for later use.");
+		}
+
+		private async Task<byte[]> AcquireCertificateBytesFromOrder(IOrderContext order)
+		{
+			_logger.LogInformation("Acquiring certificate through signing request.");
+
+			var privateKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
+			var certificateChain = await order.Generate(
+				_options.CertificateSigningRequest,
+				privateKey);
+
+			var pfxBuilder = certificateChain.ToPfx(privateKey);
+			var pfxBytes = pfxBuilder.Build("LetsEncrypt", string.Empty);
+
+			_logger.LogInformation("Certificate acquired.");
+			return pfxBytes;
+		}
+
+		private async Task ValidateChallenges(IChallengeContext[] challengeContexts)
+		{
+			_logger.LogInformation("Validating all pending order authorizations.");
+
+			_stateContainer.PendingChallengeContexts = challengeContexts;
+
+			var challenges = await Task.WhenAll(
+				challengeContexts.Select(x => x.Validate()));
+
+			while (true)
+			{
+				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending))
+					break;
+
+				await Task.Delay(1000);
+				challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
+			}
+
+			_stateContainer.PendingChallengeContexts = null;
+
+			var challengeExceptions = challenges
+				.Where(x => x.Status == ChallengeStatus.Invalid)
+				.Select(x => new Exception(x.Error.Identifier + ": " + x.Error.Detail))
+				.ToArray();
+			if (challengeExceptions.Length > 0)
+				throw new OrderInvalidException(
+					"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
+					new AggregateException(challengeExceptions));
 		}
 
 		private bool IsCertificateValid =>
