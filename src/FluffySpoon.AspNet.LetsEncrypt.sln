@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt", "FluffySpoon.AspNet.LetsEncrypt\FluffySpoon.AspNet.LetsEncrypt.csproj", "{26116561-0E9D-4392-82A6-33BCAD80A9AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.csproj", "{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.csproj", "{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample.csproj", "{7796E6C9-4CB8-4F8E-8E41-357884B9C138}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,14 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{72EFAFC6-C49B-4ACA-9ABC-6269F445CA6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72EFAFC6-C49B-4ACA-9ABC-6269F445CA6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72EFAFC6-C49B-4ACA-9ABC-6269F445CA6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72EFAFC6-C49B-4ACA-9ABC-6269F445CA6B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{015C7F81-A815-4BBF-B4D8-9FE1573E6B00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{015C7F81-A815-4BBF-B4D8-9FE1573E6B00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{015C7F81-A815-4BBF-B4D8-9FE1573E6B00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{015C7F81-A815-4BBF-B4D8-9FE1573E6B00}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C93D8460-D7DA-4372-A156-61D3F51AA5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C93D8460-D7DA-4372-A156-61D3F51AA5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C93D8460-D7DA-4372-A156-61D3F51AA5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -35,6 +29,10 @@ Global
 		{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7796E6C9-4CB8-4F8E-8E41-357884B9C138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7796E6C9-4CB8-4F8E-8E41-357884B9C138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7796E6C9-4CB8-4F8E-8E41-357884B9C138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7796E6C9-4CB8-4F8E-8E41-357884B9C138}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

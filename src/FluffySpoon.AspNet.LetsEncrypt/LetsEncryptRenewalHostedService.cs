@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
+using Certes.Acme.Resource;
+using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -127,7 +129,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				var domains = _options.Domains.ToArray();
 				_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] {domains});
-
+				
 				var order = await acme.NewOrder(domains);
 				var allAuthorizations = await order.Authorizations();
 				var challengeContexts = await Task.WhenAll(
@@ -137,8 +139,25 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				_stateContainer.PendingChallengeContexts = challengeContexts;
 
-				await Task.WhenAll(
+				var challenges = await Task.WhenAll(
 					challengeContexts.Select(x => x.Validate()));
+
+				while(true) {
+					if(!challenges.Any(x => x.Status == ChallengeStatus.Pending))
+						break;
+
+					await Task.Delay(1000);
+					challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
+				}
+
+				var challengeExceptions = challenges
+					.Where(x => x.Status == ChallengeStatus.Invalid)
+					.Select(x => new Exception(x.Error.Identifier + ": " + x.Error.Detail))
+					.ToArray();
+				if(challengeExceptions.Length > 0)
+					throw new OrderInvalidException(
+						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.", 
+						new AggregateException(challengeExceptions));
 
 				_stateContainer.PendingChallengeContexts = null;
 

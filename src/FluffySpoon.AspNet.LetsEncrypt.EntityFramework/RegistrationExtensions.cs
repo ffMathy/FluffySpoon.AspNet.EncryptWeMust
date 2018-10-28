@@ -16,7 +16,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptPersistence(
 				(provider) => new EntityFrameworkCertificatePersistenceStrategy<TDbContext>(
-					provider.GetRequiredService<TDbContext>(),
+					services.BuildServiceProvider(),
 					persistAsync,
 					retrieveAsync));
 		}
