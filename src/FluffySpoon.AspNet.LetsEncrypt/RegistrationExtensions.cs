@@ -36,7 +36,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  this IServiceCollection services,
 		  Func<IServiceProvider, ICertificatePersistenceStrategy> certificatePersistenceStrategyFactory)
 		{
-			services.AddSingleton(certificatePersistenceStrategyFactory);
+			services.AddScoped(certificatePersistenceStrategyFactory);
 		}
 
 		public static void AddFluffySpoonLetsEncryptFilePersistence(
