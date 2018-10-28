@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Certes;
@@ -15,6 +16,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	class LetsEncryptRenewalHostedService : IHostedService, IDisposable
 	{
+		private const string AccountCertificateKey = "AccountCertificate";
+		private const string SiteCertificateKey = "SiteCertificate";
+
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly ILogger<LetsEncryptRenewalHostedService> _logger;
@@ -77,11 +81,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				await lifecycleHook.OnStopAsync();
 		}
 
-		private async Task<byte[]> GetPersistedCertificateBytesAsync()
+		private async Task<byte[]> GetPersistedCertificateBytesAsync(string key)
 		{
 			foreach (var strategy in _certificatePersistenceStrategies)
 			{
-				var bytes = await strategy.RetrieveAsync();
+				var bytes = await strategy.RetrieveAsync(key);
 				if (bytes != null)
 					return bytes;
 			}
@@ -94,7 +98,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			if (_stateContainer.Certificate != null)
 				return false;
 
-			var certificateBytes = await GetPersistedCertificateBytesAsync();
+			var certificateBytes = await GetPersistedCertificateBytesAsync(SiteCertificateKey);
 			if (certificateBytes == null)
 				return false;
 
@@ -130,10 +134,25 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					: WellKnownServers.LetsEncryptV2;
 				if (acme == null)
 				{
-					_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
+					var existingAccountKeyBytes = await GetPersistedCertificateBytesAsync(AccountCertificateKey);
+					if(existingAccountKeyBytes != null)
+					{
+						_logger.LogDebug("Using existing LetsEncrypt account.");
 
-					acme = new AcmeContext(letsencryptUri);
-					await acme.NewAccount(_options.Email, true);
+						var accountKey = KeyFactory.FromPem(Encoding.UTF8.GetString(existingAccountKeyBytes));
+
+						acme = new AcmeContext(letsencryptUri, accountKey);
+						await acme.Account();
+					} else { 
+						_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
+
+						acme = new AcmeContext(letsencryptUri);
+						await acme.NewAccount(_options.Email, true);
+					
+						var newAccountKeyBytes = Encoding.UTF8.GetBytes(acme.AccountKey.ToPem());
+						var accountCertificatePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(AccountCertificateKey, newAccountKeyBytes));
+						await Task.WhenAll(accountCertificatePersistenceTasks);
+					}
 				}
 
 				var domains = _options.Domains.ToArray();
@@ -182,8 +201,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				_logger.LogInformation("Certificate acquired.");
 
-				var persistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(pfxBytes));
-				await Task.WhenAll(persistenceTasks);
+				var sitePersistenceTasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(SiteCertificateKey, pfxBytes));
+				await Task.WhenAll(sitePersistenceTasks);
 
 				_logger.LogInformation("Certificate persisted for later use.");
 

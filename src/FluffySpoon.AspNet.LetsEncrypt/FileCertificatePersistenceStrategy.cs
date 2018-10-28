@@ -12,23 +12,28 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			this.relativeFilePath = relativeFilePath;
 		}
 
-		public Task PersistAsync(byte[] certificateBytes)
+		public Task PersistAsync(string key, byte[] certificateBytes)
 		{
 			lock (typeof(FileCertificatePersistenceStrategy))
-				File.WriteAllBytes(relativeFilePath, certificateBytes);
+				File.WriteAllBytes(GetCertificatePath(key), certificateBytes);
 
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync()
+		public Task<byte[]> RetrieveAsync(string key)
 		{
 			lock (typeof(FileCertificatePersistenceStrategy))
 			{
-				if (!File.Exists(relativeFilePath))
+				if (!File.Exists(GetCertificatePath(key)))
 					return Task.FromResult<byte[]>(null);
 
-				return Task.FromResult(File.ReadAllBytes(relativeFilePath));
+				return Task.FromResult(File.ReadAllBytes(GetCertificatePath(key)));
 			}
+		}
+
+		private string GetCertificatePath(string key)
+		{
+			return relativeFilePath + "_" + key;
 		}
 	}
 }

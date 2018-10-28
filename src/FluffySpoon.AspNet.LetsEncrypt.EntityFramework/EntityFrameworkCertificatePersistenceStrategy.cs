@@ -10,27 +10,27 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 	{
 		public EntityFrameworkCertificatePersistenceStrategy(
 			ServiceProvider serviceProvider,
-			Func<TDbContext, byte[], Task> persistAsync,
-			Func<TDbContext, Task<byte[]>> retrieveAsync) : base(
-				async (bytes) =>
+			Func<TDbContext, string, byte[], Task> persistAsync,
+			Func<TDbContext, string, Task<byte[]>> retrieveAsync) : base(
+				async (key, bytes) =>
 				{
 					using (var scope = serviceProvider.CreateScope())
 					using (var databaseContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
 					using (var transaction = await databaseContext.Database.BeginTransactionAsync())
 					{
-						await persistAsync(databaseContext, bytes);
+						await persistAsync(databaseContext, key, bytes);
 						await databaseContext.SaveChangesAsync();
 
 						transaction.Commit();
 					}
 				},
-				async () =>
+				async (key) =>
 				{
 					using (var scope = serviceProvider.CreateScope())
 					using (var databaseContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
 					using (var transaction = await databaseContext.Database.BeginTransactionAsync())
 					{
-						return await retrieveAsync(databaseContext);
+						return await retrieveAsync(databaseContext, key);
 					}
 				})
 		{

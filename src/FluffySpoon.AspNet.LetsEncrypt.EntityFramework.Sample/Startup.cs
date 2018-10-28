@@ -19,10 +19,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 			services.AddDbContext<DatabaseContext>();
 
 			services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
-				async (databaseContext, bytes) => databaseContext.Certificates.Add(new Certificate() { Bytes = bytes }),
-				async (databaseContext) => databaseContext
+				async (databaseContext, key, bytes) => databaseContext.Certificates.Add(new Certificate() { 
+					Bytes = bytes,
+					Key = key
+				}),
+				async (databaseContext, key) => databaseContext
 					.Certificates
-					.SingleOrDefault()
+					.SingleOrDefault(x => x.Key == key)
 					?.Bytes);
 
 			services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()

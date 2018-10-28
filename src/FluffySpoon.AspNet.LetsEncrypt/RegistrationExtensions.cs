@@ -17,8 +17,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public static void AddFluffySpoonLetsEncryptPersistence(
 			this IServiceCollection services,
-			Func<byte[], Task> persistAsync,
-			Func<Task<byte[]>> retrieveAsync)
+			Func<string, byte[], Task> persistAsync,
+			Func<string, Task<byte[]>> retrieveAsync)
 		{
 			AddFluffySpoonLetsEncryptPersistence(services,
 				new CustomCertificatePersistenceStrategy(

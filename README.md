@@ -74,21 +74,21 @@ Tada! Your application now supports SSL via LetsEncrypt, even from the first HTT
 # Configuring persistence
 Persistence tells the middleware how to persist and retrieve the certificate, so that if the server restarts, the certificate can be re-used without generating a new one.
 
+A certificate has a _key_ to distinguish between certificates, since there is both an account certificate and a site certificate that needs to be stored.
+
 ## File persistence
 ```csharp
-//takes an optional file name parameter to specify which file to persist the certificate to.
 services.AddFluffySpoonLetsEncryptFilePersistence();
 ```
 
 ## Custom persistence
 ```csharp
-//takes an optional file name parameter to specify which file to persist the certificate to.
 services.AddFluffySpoonLetsEncryptPersistence(/* your own ILetsEncryptCertificatePersistence implementation */);
 
 //you can also customize persistence via delegates.
 services.AddFluffySpoonLetsEncryptPersistence(
-	async (bytes) => File.WriteAllBytes("myfile", bytes),
-	async () => File.ReadAllBytes("myfile", bytes));
+	async (key, bytes) => File.WriteAllBytes("myfile_" + key, bytes),
+	async (key) => File.ReadAllBytes("myfile_" + key, bytes));
 ```
 
 ## Entity Framework persistence
@@ -97,13 +97,22 @@ Requires the NuGet package `FluffySpoon.AspNet.LetsEncrypt.EntityFramework`.
 ```csharp
 // Certificate in this example is a database model class that has been configured with the database context.
 class Certificate {
+	[Key]
+	public string Key { get; set; }
+
 	public byte[] Bytes { get; set; }
 }
 
 //we only have to instruct how to add the certificate - `databaseContext.SaveChangesAsync()` is automatically called.
 services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
-	async (databaseContext, bytes) => databaseContext.Certificates.Add(new Certificate() { Bytes = bytes }),
-	async (databaseContext) => databaseContext.Certificates.SingleOrDefault()?.Bytes);
+	async (databaseContext, key, bytes) => databaseContext.Certificates.Add(new Certificate() { 
+		Bytes = bytes,
+		Key = key
+	}),
+	async (databaseContext, key) => databaseContext
+		.Certificates
+		.SingleOrDefault(x => x.Key == key)
+		?.Bytes);
 ```
 
 # Hooking into events

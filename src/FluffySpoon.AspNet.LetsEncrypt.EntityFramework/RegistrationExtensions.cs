@@ -10,8 +10,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 	{
 		public static void AddFluffySpoonLetsEncryptEntityFrameworkPersistence<TDbContext>(
 			this IServiceCollection services,
-			Func<TDbContext, byte[], Task> persistAsync,
-			Func<TDbContext, Task<byte[]>> retrieveAsync)
+			Func<TDbContext, string, byte[], Task> persistAsync,
+			Func<TDbContext, string, Task<byte[]>> retrieveAsync)
 		where TDbContext : DbContext
 		{
 			services.AddFluffySpoonLetsEncryptPersistence(

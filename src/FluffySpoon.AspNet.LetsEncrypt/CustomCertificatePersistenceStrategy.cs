@@ -5,25 +5,25 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class CustomCertificatePersistenceStrategy: ICertificatePersistenceStrategy
 	{
-		private readonly Func<byte[], Task> persistAsync;
-		private readonly Func<Task<byte[]>> retrieveAsync;
+		private readonly Func<string, byte[], Task> persistAsync;
+		private readonly Func<string, Task<byte[]>> retrieveAsync;
 
 		public CustomCertificatePersistenceStrategy(
-			Func<byte[], Task> persistAsync,
-			Func<Task<byte[]>> retrieveAsync)
+			Func<string, byte[], Task> persistAsync,
+			Func<string, Task<byte[]>> retrieveAsync)
 		{
 			this.persistAsync = persistAsync;
 			this.retrieveAsync = retrieveAsync;
 		}
 
-		public Task PersistAsync(byte[] certificateBytes)
+		public Task PersistAsync(string key, byte[] certificateBytes)
 		{
-			return persistAsync(certificateBytes);
+			return persistAsync(key, certificateBytes);
 		}
 
-		public Task<byte[]> RetrieveAsync()
+		public Task<byte[]> RetrieveAsync(string key)
 		{
-			return retrieveAsync();
+			return retrieveAsync(key);
 		}
 	}
 }
