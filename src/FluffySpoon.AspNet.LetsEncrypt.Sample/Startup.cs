@@ -30,6 +30,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 				}
 			});
 
+			services.AddFluffySpoonLetsEncryptRenewalService();
+
 			services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
 			services.AddFluffySpoonLetsEncryptFileChallengePersistence();
 		}

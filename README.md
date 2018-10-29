@@ -43,6 +43,9 @@ services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 	}
 });
 
+//the following line adds the automatic renewal service.
+services.AddFluffySpoonLetsEncryptRenewalService();
+
 //the following line tells the library to persist the certificate to a file, so that if the server restarts, the certificate can be re-used without generating a new one.
 services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
 

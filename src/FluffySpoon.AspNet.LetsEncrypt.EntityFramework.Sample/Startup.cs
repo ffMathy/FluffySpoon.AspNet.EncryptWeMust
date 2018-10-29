@@ -18,7 +18,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 			services.AddEntityFrameworkInMemoryDatabase();
 			services.AddDbContext<DatabaseContext>();
 
-			services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
+			services.AddFluffySpoonLetsEncryptEntityFrameworkCertificatePersistence<DatabaseContext>(
 				async (databaseContext, key, bytes) => databaseContext.Certificates.Add(new Certificate() { 
 					Bytes = bytes,
 					Key = key
@@ -43,6 +43,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 					State = "StateStuff"
 				}
 			});
+
+			services.AddFluffySpoonLetsEncryptRenewalService();
+
 			services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
 			services.AddFluffySpoonLetsEncryptMemoryChallengePersistence();
 		}

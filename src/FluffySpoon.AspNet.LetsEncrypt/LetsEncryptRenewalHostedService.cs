@@ -50,18 +50,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public void Dispose()
 		{
-			if (!RegistrationExtensions.IsLetsEncryptUsed)
-				return;
-
 			_logger.LogWarning("The LetsEncrypt middleware's background renewal thread is shutting down.");
 			_timer?.Dispose();
 		}
 
 		public async Task StartAsync(CancellationToken cancellationToken)
 		{
-			if (!RegistrationExtensions.IsLetsEncryptUsed)
-				return;
-
 			if (_options.TimeAfterIssueDateBeforeRenewal == null && _options.TimeUntilExpiryBeforeRenewal == null)
 				throw new InvalidOperationException(
 					"Neither TimeAfterIssueDateBeforeRenewal nor TimeUntilExpiryBeforeRenewal have been set, which means that the LetsEncrypt certificate will never renew.");
@@ -74,9 +68,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
-			if (!RegistrationExtensions.IsLetsEncryptUsed)
-				return;
-
 			_timer?.Change(Timeout.Infinite, 0);
 
 			foreach (var lifecycleHook in _lifecycleHooks)
