@@ -29,7 +29,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 					State = "StateStuff"
 				}
 			});
-			services.AddFluffySpoonLetsEncryptFilePersistence();
+
+			services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
+			services.AddFluffySpoonLetsEncryptFileChallengePersistence();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 {
-	public class EntityFrameworkCertificatePersistenceStrategy<TDbContext> : CustomCertificatePersistenceStrategy
+	public class EntityFrameworkCertificatePersistenceStrategy<TDbContext> : CustomPersistenceStrategy
 		where TDbContext : DbContext
 	{
 		public EntityFrameworkCertificatePersistenceStrategy(

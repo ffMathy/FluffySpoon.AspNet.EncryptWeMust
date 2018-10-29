@@ -43,8 +43,11 @@ services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 	}
 });
 
-//the following line tells the middleware to persist the certificate to a file, so that if the server restarts, the certificate can be re-used without generating a new one.
-services.AddFluffySpoonLetsEncryptFilePersistence();
+//the following line tells the library to persist the certificate to a file, so that if the server restarts, the certificate can be re-used without generating a new one.
+services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
+
+//the following line tells the library to persist challenges in-memory. challenges are the "/.well-known" URL codes that LetsEncrypt will call.
+services.AddFluffySpoonLetsEncryptMemoryChallengePersistence();
 ```
 
 ## Inject the middleware
@@ -64,7 +67,7 @@ Finally, to make Kestrel automatically select the LetsEncrypt certificate, we mu
 WebHost.CreateDefaultBuilder(args)
 	.UseKestrel(kestrelOptions => kestrelOptions.ConfigureHttpsDefaults(
 			httpsOptions => httpsOptions.ServerCertificateSelector = 
-				(c, s) => LetsEncryptCertificateContainer.Instance.Certificate))
+				(c, s) => LetsEncryptRenewalService.Certificate))
 	.UseUrls("http://" + DomainToUse, "https://" + DomainToUse)
 	.UseStartup<Startup>();
 ```

@@ -14,7 +14,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			Func<TDbContext, string, Task<byte[]>> retrieveAsync)
 		where TDbContext : DbContext
 		{
-			services.AddFluffySpoonLetsEncryptPersistence(
+			services.AddFluffySpoonLetsEncryptCertificatePersistence(
 				(provider) => new EntityFrameworkCertificatePersistenceStrategy<TDbContext>(
 					services.BuildServiceProvider(),
 					persistAsync,

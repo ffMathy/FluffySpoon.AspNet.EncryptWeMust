@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -10,13 +11,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 	{
 		private readonly RequestDelegate _next;
 		private readonly ILogger<LetsEncryptMiddleware> _logger;
-		private readonly LetsEncryptCertificateContainer _stateContainer;
+
+		private readonly IPersistenceService _persistenceService;
 
 		public LetsEncryptMiddleware(
 			RequestDelegate next,
 			LetsEncryptOptions options,
 			ILogger<LetsEncryptMiddleware> logger,
-			LetsEncryptCertificateContainer stateContainer)
+			IPersistenceService persistenceService)
 		{
 			if (options?.Domains == null)
 				throw new ArgumentNullException(nameof(options), "You must provide what domains to use for LetsEncrypt.");
@@ -29,7 +31,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			_next = next;
 			_logger = logger;
-			_stateContainer = stateContainer;
+			_persistenceService = persistenceService;
 		}
 
 		public async Task InvokeAsync(
@@ -43,7 +45,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				_logger.LogDebug("Challenge invoked: {0}", path);
 
 				var requestedToken = path.Substring(magicPrefix.Length);
-				var matchingChallenge = _stateContainer.PendingChallengeContexts?.FirstOrDefault(x => x.Token == requestedToken);
+
+				var allChallenges = await _persistenceService.GetPersistedChallengesAsync();
+				var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
 				if (matchingChallenge == null)
 				{
 					_logger.LogInformation("The given challenge did not match: {0}", path);
@@ -52,7 +56,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					return;
 				}
 
-				await context.Response.WriteAsync(matchingChallenge.KeyAuthz);
+				await context.Response.WriteAsync(matchingChallenge.Response);
 				return;
 			}
 

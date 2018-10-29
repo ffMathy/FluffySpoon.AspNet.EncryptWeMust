@@ -9,44 +9,41 @@ using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
 using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
-	class LetsEncryptRenewalHostedService : IHostedService, IDisposable
+	public class LetsEncryptRenewalService : IHostedService, IDisposable
 	{
-		private const string AccountCertificateKey = "AccountCertificate";
-		private const string SiteCertificateKey = "SiteCertificate";
-
-		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
-
-		private readonly ILogger<LetsEncryptRenewalHostedService> _logger;
+		private readonly IPersistenceService _persistenceService;
+		private readonly ILogger<LetsEncryptRenewalService> _logger;
 		private readonly LetsEncryptOptions _options;
-		private readonly LetsEncryptCertificateContainer _stateContainer;
 		private readonly SemaphoreSlim _semaphoreSlim;
 
 		private IAcmeContext acme;
 
 		private Timer _timer;
 
+		public static X509Certificate2 Certificate { get; private set; }
+
 		public Uri LetsEncryptUri => _options.UseStaging
 			? WellKnownServers.LetsEncryptStagingV2
 			: WellKnownServers.LetsEncryptV2;
 
-		public LetsEncryptRenewalHostedService(
-			IEnumerable<ICertificatePersistenceStrategy> certificatePersistenceStrategies,
+		public LetsEncryptRenewalService(
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
-			ILogger<LetsEncryptRenewalHostedService> logger,
-			LetsEncryptOptions options,
-			LetsEncryptCertificateContainer stateContainer)
+			IPersistenceService persistenceService,
+			ILogger<LetsEncryptRenewalService> logger,
+			LetsEncryptOptions options)
 		{
-			_certificatePersistenceStrategies = certificatePersistenceStrategies;
 			_lifecycleHooks = lifecycleHooks;
+			_persistenceService = persistenceService;
 			_logger = logger;
 			_options = options;
-			_stateContainer = stateContainer;
 
 			_semaphoreSlim = new SemaphoreSlim(1);
 		}
@@ -86,28 +83,16 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				await lifecycleHook.OnStopAsync();
 		}
 
-		private async Task<byte[]> GetPersistedCertificateBytesAsync(string key)
-		{
-			foreach (var strategy in _certificatePersistenceStrategies)
-			{
-				var bytes = await strategy.RetrieveAsync(key);
-				if (bytes != null)
-					return bytes;
-			}
-
-			return null;
-		}
-
 		private async Task<bool> TryRetrievingValidPersistedSiteCertificateAsync()
 		{
-			if (_stateContainer.Certificate != null)
+			if (Certificate != null)
 				return false;
 
-			var certificateBytes = await GetPersistedCertificateBytesAsync(SiteCertificateKey);
-			if (certificateBytes == null)
+			var certificate = await _persistenceService.GetPersistedSiteCertificateAsync();
+			if (certificate == null)
 				return false;
 
-			_stateContainer.Certificate = GetCertificateFromBytes(certificateBytes);
+			Certificate = certificate;
 
 			if (IsCertificateValid)
 			{
@@ -161,9 +146,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			await ValidateOrderAsync(order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
-			await PersistSiteCertificateAsync(certificateBytes);
+			var certificate = new X509Certificate2(certificateBytes);
+			await _persistenceService.PersistSiteCertificateAsync(certificate);
 
-			_stateContainer.Certificate = GetCertificateFromBytes(certificateBytes);
+			Certificate = certificate;
 		}
 
 		private async Task AuthenticateAsync()
@@ -171,10 +157,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			if (acme != null)
 				return;
 
-			var existingAccountKeyBytes = await GetPersistedCertificateBytesAsync(AccountCertificateKey);
-			if (existingAccountKeyBytes != null)
+			var existingAccountKey = await _persistenceService.GetPersistedAccountCertificateAsync();
+			if (existingAccountKey != null)
 			{
-				await UseExistingLetsEncryptAccount(existingAccountKeyBytes);
+				await UseExistingLetsEncryptAccount(existingAccountKey);
 			}
 			else
 			{
@@ -182,13 +168,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 		}
 
-		private async Task UseExistingLetsEncryptAccount(byte[] existingAccountKeyBytes)
+		private async Task UseExistingLetsEncryptAccount(IKey existingAccountKey)
 		{
 			_logger.LogDebug("Using existing LetsEncrypt account.");
-
-			var accountKey = KeyFactory.FromPem(Encoding.UTF8.GetString(existingAccountKeyBytes));
-
-			acme = new AcmeContext(LetsEncryptUri, accountKey);
+			
+			acme = new AcmeContext(LetsEncryptUri, existingAccountKey);
 			await acme.Account();
 		}
 
@@ -198,26 +182,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			acme = new AcmeContext(LetsEncryptUri);
 			await acme.NewAccount(_options.Email, true);
-
-			var newAccountKeyBytes = Encoding.UTF8.GetBytes(acme.AccountKey.ToPem());
-			await PersistAccountCertificateAsync(newAccountKeyBytes);
-		}
-
-		private async Task PersistAccountCertificateAsync(byte[] newAccountKeyBytes)
-		{
-			await PersistCertificateAsync(AccountCertificateKey, newAccountKeyBytes);
-		}
-
-		private async Task PersistCertificateAsync(string key, byte[] certificateBytes)
-		{
-			var tasks = _certificatePersistenceStrategies.Select(x => x.PersistAsync(key, certificateBytes));
-			await Task.WhenAll(tasks);
-		}
-
-		private async Task PersistSiteCertificateAsync(byte[] certificateBytes)
-		{
-			await PersistCertificateAsync(SiteCertificateKey, certificateBytes);
-			_logger.LogInformation("Certificate persisted for later use.");
+			
+			await _persistenceService.PersistAccountCertificateAsync(acme.AccountKey);
 		}
 
 		private async Task<byte[]> AcquireCertificateBytesFromOrderAsync(IOrderContext order)
@@ -244,7 +210,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			_logger.LogInformation("Validating all pending order authorizations.");
 
-			_stateContainer.PendingChallengeContexts = challengeContexts;
+			var challengeDtos = challengeContexts.Select(x => new ChallengeDto() {
+				Token = x.Token,
+				Response = x.KeyAuthz
+			}).ToArray();
+			await _persistenceService.PersistChallengesAsync(challengeDtos);
 
 			try
 			{
@@ -260,7 +230,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 			finally
 			{
-				_stateContainer.PendingChallengeContexts = null;
+				await _persistenceService.PersistChallengesAsync(null);
 			}
 		}
 
@@ -282,15 +252,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		}
 
 		private bool IsCertificateValid =>
-			_stateContainer.Certificate != null &&
-			((_options.TimeUntilExpiryBeforeRenewal == null || _stateContainer.Certificate.NotAfter - DateTime.Now >
+			Certificate != null &&
+			((_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
 			_options.TimeUntilExpiryBeforeRenewal) &&
-			(_options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - _stateContainer.Certificate.NotBefore >
+			(_options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
 			_options.TimeAfterIssueDateBeforeRenewal));
-
-		private static X509Certificate2 GetCertificateFromBytes(byte[] pfxBytes)
-		{
-			return new X509Certificate2(pfxBytes);
-		}
 	}
 }

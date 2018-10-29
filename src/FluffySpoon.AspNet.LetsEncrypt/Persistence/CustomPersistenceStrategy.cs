@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
-	public class CustomCertificatePersistenceStrategy: ICertificatePersistenceStrategy
+	public class CustomPersistenceStrategy: ICertificatePersistenceStrategy, IChallengePersistenceStrategy
 	{
 		private readonly Func<string, byte[], Task> persistAsync;
 		private readonly Func<string, Task<byte[]>> retrieveAsync;
 
-		public CustomCertificatePersistenceStrategy(
+		public CustomPersistenceStrategy(
 			Func<string, byte[], Task> persistAsync,
 			Func<string, Task<byte[]>> retrieveAsync)
 		{
@@ -16,9 +16,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			this.retrieveAsync = retrieveAsync;
 		}
 
-		public Task PersistAsync(string key, byte[] certificateBytes)
+		public Task PersistAsync(string key, byte[] bytes)
 		{
-			return persistAsync(key, certificateBytes);
+			return persistAsync(key, bytes);
 		}
 
 		public Task<byte[]> RetrieveAsync(string key)

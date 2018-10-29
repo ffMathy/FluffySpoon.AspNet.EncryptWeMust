@@ -1,20 +1,20 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
-	public class FileCertificatePersistenceStrategy : ICertificatePersistenceStrategy
+	public class FilePersistenceStrategy : ICertificatePersistenceStrategy, IChallengePersistenceStrategy
 	{
 		private readonly string relativeFilePath;
 
-		public FileCertificatePersistenceStrategy(string relativeFilePath)
+		public FilePersistenceStrategy(string relativeFilePath)
 		{
 			this.relativeFilePath = relativeFilePath;
 		}
 
 		public Task PersistAsync(string key, byte[] certificateBytes)
 		{
-			lock (typeof(FileCertificatePersistenceStrategy))
+			lock (typeof(FilePersistenceStrategy))
 				File.WriteAllBytes(GetCertificatePath(key), certificateBytes);
 
 			return Task.CompletedTask;
@@ -22,7 +22,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public Task<byte[]> RetrieveAsync(string key)
 		{
-			lock (typeof(FileCertificatePersistenceStrategy))
+			lock (typeof(FilePersistenceStrategy))
 			{
 				if (!File.Exists(GetCertificatePath(key)))
 					return Task.FromResult<byte[]>(null);

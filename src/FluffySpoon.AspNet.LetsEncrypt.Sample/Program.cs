@@ -20,7 +20,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 				{
 					kestrelOptions.ConfigureHttpsDefaults(httpsOptions =>
 					{
-						httpsOptions.ServerCertificateSelector = (c, s) => LetsEncryptCertificateContainer.Instance.Certificate;
+						httpsOptions.ServerCertificateSelector = (c, s) => LetsEncryptRenewalService.Certificate;
 					});
 				})
 				.UseUrls(
