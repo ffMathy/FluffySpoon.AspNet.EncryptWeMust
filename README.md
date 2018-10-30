@@ -139,12 +139,14 @@ services.AddFluffySpoonLetsEncryptEntityFrameworkCertificatePersistence<Database
 services.AddFluffySpoonLetsEncryptEntityFrameworkChallengePersistence<DatabaseContext>(...);
 ```
 
-## Redis persistence
-Requires the NuGet package `FluffySpoon.AspNet.LetsEncrypt.Redis`, and that you have already configured distributed caching in ASP .NET Core using the `services.AddDistributedRedisCache()` statement.
+## Distributed cache (Redis etc) persistence
+Requires:
+- The NuGet package `FluffySpoon.AspNet.LetsEncrypt.DistributedCache`.
+- A configured distributed cache in ASP .NET Core using the `services.AddDistributedRedisCache()` or similar.
 
 ```csharp
-services.AddFluffySpoonLetsEncryptRedisCertificatePersistence();
-services.AddFluffySpoonLetsEncryptRedisChallengePersistence();
+services.AddFluffySpoonLetsEncryptDistributedCertificatePersistence();
+services.AddFluffySpoonLetsEncryptDistributedChallengePersistence();
 ```
 
 # Hooking into events
