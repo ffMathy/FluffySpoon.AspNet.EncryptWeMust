@@ -145,8 +145,8 @@ Requires:
 - A configured distributed cache in ASP .NET Core using the `services.AddDistributedRedisCache()` or similar.
 
 ```csharp
-services.AddFluffySpoonLetsEncryptDistributedCertificatePersistence();
-services.AddFluffySpoonLetsEncryptDistributedChallengePersistence();
+services.AddFluffySpoonLetsEncryptDistributedCertificatePersistence(expiry: TimeSpan.FromDays(30));
+services.AddFluffySpoonLetsEncryptDistributedChallengePersistence(expiry: TimeSpan.FromHours(1));
 ```
 
 # Hooking into events

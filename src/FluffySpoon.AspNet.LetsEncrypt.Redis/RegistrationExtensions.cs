@@ -10,20 +10,20 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 	{
 		public static void AddFluffySpoonLetsEncryptDistributedCacheCertificatePersistence(
 			this IServiceCollection services,
-			string cacheKey)
+			TimeSpan expiry)
 		{
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<IDistributedCache>()));
+					provider.GetRequiredService<IDistributedCache>(), expiry));
 		}
 
 		public static void AddFluffySpoonLetsEncryptDistributedCacheChallengePersistence(
 			this IServiceCollection services,
-			string cacheKey)
+			TimeSpan expiry)
 		{
 			services.AddFluffySpoonLetsEncryptChallengePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<IDistributedCache>()));
+					provider.GetRequiredService<IDistributedCache>(), expiry));
 		}
 	}
 }
