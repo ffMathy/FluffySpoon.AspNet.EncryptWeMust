@@ -28,7 +28,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 					.SingleOrDefault(x => x.Key == key)
 					?.Bytes);
 
-			services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
+			services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
 			{
 				Email = "some-email@github.com",
 				UseStaging = true,
@@ -44,8 +44,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 				}
 			});
 
-			services.AddFluffySpoonLetsEncryptRenewalService();
-
 			services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
 			services.AddFluffySpoonLetsEncryptMemoryChallengePersistence();
 		}
@@ -58,7 +56,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.UseFluffySpoonLetsEncrypt();
+			app.UseLetsEncryptChallengeApprovalMiddleware();
 
 			app.Run(async (context) =>
 			{

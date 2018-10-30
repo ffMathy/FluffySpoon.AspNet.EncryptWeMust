@@ -26,7 +26,8 @@ Add the following code to your `Startup` class' `ConfigureServices` method with 
 _Note that you can set either `TimeUntilExpiryBeforeRenewal`, `TimeAfterIssueDateBeforeRenewal` or both, but at least one of them has to be specified._
 
 ```csharp
-services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
+//the following line adds the automatic renewal service.
+services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
 {
 	Email = "some-email@github.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
 	UseStaging = false, //switch to true for testing
@@ -43,9 +44,6 @@ services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 	}
 });
 
-//the following line adds the automatic renewal service.
-services.AddFluffySpoonLetsEncryptRenewalService();
-
 //the following line tells the library to persist the certificate to a file, so that if the server restarts, the certificate can be re-used without generating a new one.
 services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
 
@@ -59,7 +57,7 @@ Inject the middleware in the `Startup` class' `Configure` method as such:
 ```csharp
 public void Configure()
 {
-	app.UseFluffySpoonLetsEncrypt();
+	app.UseLetsEncryptChallengeApprovalMiddleware();
 }
 ```
 
@@ -84,17 +82,22 @@ A certificate has a _key_ to distinguish between certificates, since there is bo
 
 ## File persistence
 ```csharp
-services.AddFluffySpoonLetsEncryptFilePersistence();
+services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
+services.AddFluffySpoonLetsEncryptFileChallengePersistence();
 ```
 
 ## Custom persistence
 ```csharp
-services.AddFluffySpoonLetsEncryptPersistence(/* your own ILetsEncryptCertificatePersistence implementation */);
+services.AddFluffySpoonLetsEncryptCertificatePersistence(/* your own ILetsEncryptPersistence implementation */);
+services.AddFluffySpoonLetsEncryptChallengePersistence(/* your own ILetsEncryptPersistence implementation */);
 
 //you can also customize persistence via delegates.
-services.AddFluffySpoonLetsEncryptPersistence(
-	async (key, bytes) => File.WriteAllBytes("myfile_" + key, bytes),
-	async (key) => File.ReadAllBytes("myfile_" + key, bytes));
+services.AddFluffySpoonLetsEncryptCertificatePersistence(
+	async (key, bytes) => File.WriteAllBytes("certificate_" + key, bytes),
+	async (key) => File.ReadAllBytes("certificate_" + key, bytes));
+
+//the same can be done for challenges with the same arguments.
+services.AddFluffySpoonLetsEncryptChallengePersistence(...);
 ```
 
 ## Entity Framework persistence
@@ -110,7 +113,7 @@ class Certificate {
 }
 
 //we only have to instruct how to add the certificate - `databaseContext.SaveChangesAsync()` is automatically called.
-services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
+services.AddFluffySpoonLetsEncryptEntityFrameworkCertificatePersistence<DatabaseContext>(
 	async (databaseContext, key, bytes) =>
 	{
 		var existingCertificate = databaseContext.Certificates.SingleOrDefault(x => x.Key == key);
@@ -131,6 +134,17 @@ services.AddFluffySpoonLetsEncryptEntityFrameworkPersistence<DatabaseContext>(
 		.Certificates
 		.SingleOrDefault(x => x.Key == key)
 		?.Bytes);
+
+//the same can be done for challenges with the same arguments.
+services.AddFluffySpoonLetsEncryptEntityFrameworkChallengePersistence<DatabaseContext>(...);
+```
+
+## Redis persistence
+Requires the NuGet package `FluffySpoon.AspNet.LetsEncrypt.Redis`, and that you have already configured distributed caching in ASP .NET Core using the `services.AddDistributedRedisCache()` statement.
+
+```csharp
+services.AddFluffySpoonLetsEncryptRedisCertificatePersistence();
+services.AddFluffySpoonLetsEncryptRedisChallengePersistence();
 ```
 
 # Hooking into events
@@ -159,8 +173,3 @@ class MyLifecycleHook : ICertificateRenewalLifecycleHook {
 //this is how to wire up the hook.
 services.AddFluffySpoonLetsEncryptRenewalLifecycleHook<MyLifecycleHook>();
 ```
-
-# Really?
-Yes, really. This even works in an Azure App Service - technically any host that can host ASP .NET Core 2.1 applications can use this without issues.
-
-I got tired of disappointing Azure support for LetsEncrypt, which currently requires a plugin and potentially hours of fiddling around just to get it working.

@@ -82,13 +82,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				new FilePersistenceStrategy(relativeFilePath));
 		}
 
-		public static void AddFluffySpoonLetsEncrypt(
-		  this IServiceCollection services,
-		  LetsEncryptOptions options)
-		{
-			services.AddSingleton(options);
-		}
-
 		public static void AddFluffySpoonLetsEncryptMemoryChallengePersistence(
 		  this IServiceCollection services)
 		{	
@@ -98,15 +91,18 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		}
 
 		public static void AddFluffySpoonLetsEncryptRenewalService(
-		  this IServiceCollection services)
+		  this IServiceCollection services,
+		  LetsEncryptOptions options)
 		{
+			services.AddSingleton(options);
+			services.AddTransient<ILetsEncryptRenewalService>(p => p.GetRequiredService<LetsEncryptRenewalService>());
 			services.AddHostedService<LetsEncryptRenewalService>();
 		}
 
-		public static void UseFluffySpoonLetsEncrypt(
+		public static void UseLetsEncryptChallengeApprovalMiddleware(
 			this IApplicationBuilder app)
 		{
-			app.UseMiddleware<LetsEncryptMiddleware>();
+			app.UseMiddleware<LetsEncryptChallengeApprovalMiddleware>();
 		}
 	}
 }

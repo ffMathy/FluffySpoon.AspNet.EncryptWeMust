@@ -6,10 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 {
-	public class EntityFrameworkCertificatePersistenceStrategy<TDbContext> : CustomPersistenceStrategy
+	public class EntityFrameworkPersistenceStrategy<TDbContext> : CustomPersistenceStrategy
 		where TDbContext : DbContext
 	{
-		public EntityFrameworkCertificatePersistenceStrategy(
+		public EntityFrameworkPersistenceStrategy(
 			ServiceProvider serviceProvider,
 			Func<TDbContext, string, byte[], Task> persistAsync,
 			Func<TDbContext, string, Task<byte[]>> retrieveAsync) : base(

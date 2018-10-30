@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
-	public class LetsEncryptRenewalService : IHostedService, IDisposable
+	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly IPersistenceService _persistenceService;
@@ -63,7 +63,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
-			_timer = new Timer(TimerTickAsync, null, TimeSpan.Zero, TimeSpan.FromHours(1));
+			_timer = new Timer(async (state) => await RunOnceAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
@@ -96,7 +96,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return false;
 		}
 
-		private async void TimerTickAsync(object state)
+		public async Task RunOnceAsync()
 		{
 			if (_semaphoreSlim.CurrentCount == 0)
 				return;

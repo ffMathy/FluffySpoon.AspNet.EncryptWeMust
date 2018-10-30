@@ -7,28 +7,18 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
-	public class LetsEncryptMiddleware
+	public class LetsEncryptChallengeApprovalMiddleware
 	{
 		private readonly RequestDelegate _next;
-		private readonly ILogger<LetsEncryptMiddleware> _logger;
+		private readonly ILogger<LetsEncryptChallengeApprovalMiddleware> _logger;
 
 		private readonly IPersistenceService _persistenceService;
 
-		public LetsEncryptMiddleware(
+		public LetsEncryptChallengeApprovalMiddleware(
 			RequestDelegate next,
-			LetsEncryptOptions options,
-			ILogger<LetsEncryptMiddleware> logger,
+			ILogger<LetsEncryptChallengeApprovalMiddleware> logger,
 			IPersistenceService persistenceService)
 		{
-			if (options?.Domains == null)
-				throw new ArgumentNullException(nameof(options), "You must provide what domains to use for LetsEncrypt.");
-
-			if (options?.Domains == null)
-				throw new ArgumentNullException(nameof(options), "You must provide an e-mail address to use for LetsEncrypt.");
-
-			if (options?.CertificateSigningRequest == null)
-				throw new ArgumentNullException(nameof(options), "You must provide a certificate signing request to use for LetsEncrypt.");
-
 			_next = next;
 			_logger = logger;
 			_persistenceService = persistenceService;
