@@ -7,11 +7,11 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 {
-	public class RedisPersistenceStrategy : CustomPersistenceStrategy
+	public class DistributedCachePersistenceStrategy : CustomPersistenceStrategy
 	{
 		private const string KeyPrefix = "FluffySpoon_";
 
-		public RedisPersistenceStrategy(IDistributedCache cache) : base(
+		public DistributedCachePersistenceStrategy(IDistributedCache cache) : base(
 			async (key, bytes) => await cache.SetAsync(KeyPrefix + key, bytes, new DistributedCacheEntryOptions() {
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
 			}), 

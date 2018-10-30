@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample.csproj", "{7796E6C9-4CB8-4F8E-8E41-357884B9C138}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluffySpoon.AspNet.LetsEncrypt.Redis", "FluffySpoon.AspNet.LetsEncrypt.Redis\FluffySpoon.AspNet.LetsEncrypt.Redis.csproj", "{EDE58C35-D2E1-4AB4-9F67-1263FD027C76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluffySpoon.AspNet.LetsEncrypt.DistributedCache", "FluffySpoon.AspNet.LetsEncrypt.Redis\FluffySpoon.AspNet.LetsEncrypt.DistributedCache.csproj", "{EDE58C35-D2E1-4AB4-9F67-1263FD027C76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

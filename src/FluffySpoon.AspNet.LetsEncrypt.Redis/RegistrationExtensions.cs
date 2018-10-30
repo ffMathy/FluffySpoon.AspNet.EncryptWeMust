@@ -8,21 +8,21 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions
 	{
-		public static void AddFluffySpoonLetsEncryptRedisCertificatePersistence(
+		public static void AddFluffySpoonLetsEncryptDistributedCacheCertificatePersistence(
 			this IServiceCollection services,
 			string cacheKey)
 		{
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
-				(provider) => new RedisPersistenceStrategy(
+				(provider) => new DistributedCachePersistenceStrategy(
 					provider.GetRequiredService<IDistributedCache>()));
 		}
 
-		public static void AddFluffySpoonLetsEncryptRedisChallengePersistence(
+		public static void AddFluffySpoonLetsEncryptDistributedCacheChallengePersistence(
 			this IServiceCollection services,
 			string cacheKey)
 		{
 			services.AddFluffySpoonLetsEncryptChallengePersistence(
-				(provider) => new RedisPersistenceStrategy(
+				(provider) => new DistributedCachePersistenceStrategy(
 					provider.GetRequiredService<IDistributedCache>()));
 		}
 	}
