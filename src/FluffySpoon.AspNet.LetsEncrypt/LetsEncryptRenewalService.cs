@@ -18,6 +18,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
+		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
+
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly IPersistenceService _persistenceService;
 		private readonly ILogger<LetsEncryptRenewalService> _logger;
@@ -187,7 +189,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				privateKey);
 
 			var pfxBuilder = certificateChain.ToPfx(privateKey);
-			var pfxBytes = pfxBuilder.Build("LetsEncrypt", string.Empty);
+			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, string.Empty);
 
 			_logger.LogInformation("Certificate acquired.");
 			return pfxBytes;
