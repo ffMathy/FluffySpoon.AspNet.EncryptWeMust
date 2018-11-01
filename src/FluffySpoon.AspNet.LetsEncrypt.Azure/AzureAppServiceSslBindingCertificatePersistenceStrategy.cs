@@ -52,11 +52,65 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			else
 			{
 				var certificate = new X509Certificate2(bytes);
-				certificate.
+				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
+
+				var apps = await client.WebApps.ListByResourceGroupAsync(options.ResourceGroupName);
+
+				string regionName = null;
+				foreach(var app in apps) {
+					if(!app.HostNames.Contains(domain))
+						continue;
+
+					regionName = app.RegionName;
+					break;
+				}
+
+				if(regionName == null)
+					throw new InvalidOperationException("Could not find an app that has a hostname created for domain " + domain + ".");
+
+				var certificateName = TagName + "_" + Guid.NewGuid();
+				azureCertificate = await client.WebApps.Manager
+					.AppServiceCertificates
+					.Define(certificateName)
+					.WithRegion(regionName)
+					.WithExistingResourceGroup(options.ResourceGroupName)
+					.WithPfxByteArray(bytes)
+					.WithPfxPassword(string.Empty)
+					.CreateAsync();
+
+				var tags = new Dictionary<string, string>();
+				foreach(var tag in azureCertificate.Tags)
+					tags.Add(tag.Key, tag.Value);
+
+				tags.Add(TagName, key);
+
 				await client.WebApps.Manager
 					.AppServiceCertificates
-					.Define(TagName + "_" + Guid.NewGuid())
-					.WithRegion("NorthEurope")
+					.Inner
+					.UpdateAsync(
+						options.ResourceGroupName,
+						azureCertificate.Name,
+						new CertificatePatchResource()
+						{
+							Tags = tags
+						});
+
+				foreach (var app in apps)
+				{
+					if (!app.HostNames.Contains(domain))
+						continue;
+
+					await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
+						options.ResourceGroupName,
+						app.Name,
+						domain,
+						new HostNameBindingInner(
+							azureResourceType: AzureResourceType.Website,
+							hostNameType: HostNameType.Verified,
+							customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
+							sslState: SslState.SniEnabled,
+							thumbprint: azureCertificate.Thumbprint));
+				}
 			}
 		}
 
