@@ -95,7 +95,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  LetsEncryptOptions options)
 		{
 			services.AddSingleton(options);
-			services.AddTransient<ILetsEncryptRenewalService>(p => p.GetRequiredService<LetsEncryptRenewalService>());
+			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
 			services.AddHostedService<LetsEncryptRenewalService>();
 		}
 

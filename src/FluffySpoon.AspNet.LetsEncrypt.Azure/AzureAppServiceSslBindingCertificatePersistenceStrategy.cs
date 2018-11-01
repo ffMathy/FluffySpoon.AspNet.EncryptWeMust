@@ -10,19 +10,23 @@ namespace FluffySpoon.LetsEncrypt.Azure
 	using System.Threading.Tasks;
 	using FluffySpoon.AspNet.LetsEncrypt;
 	using Microsoft.Azure.Management.AppService.Fluent;
+	using Microsoft.Extensions.Logging;
 	using Azure = Microsoft.Azure.Management.Fluent.Azure;
 
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
 		private readonly AzureOptions options;
+		private readonly ILogger<AzureAppServiceSslBindingCertificatePersistenceStrategy> logger;
 		private readonly IAzure client;
 
 		private const string TagName = "FluffySpoonAspNetLetsEncrypt";
 
 		public AzureAppServiceSslBindingCertificatePersistenceStrategy(
-			AzureOptions azureOptions)
+			AzureOptions azureOptions,
+			ILogger<AzureAppServiceSslBindingCertificatePersistenceStrategy> logger)
 		{
 			options = azureOptions;
+			this.logger = logger;
 			client = Authenticate();
 		}
 
@@ -36,6 +40,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			var azureCertificate = await GetExistingCertificateAsync(key);
 			if (azureCertificate != null)
 			{
+				logger.LogInformation("Updating existing Azure certificate for key {0}.", key);
 				await client.WebApps.Manager
 					.AppServiceCertificates
 					.Inner
@@ -53,6 +58,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				var certificate = new X509Certificate2(bytes);
 				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
 
+				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", key, domain);
+
 				var apps = await client.WebApps.ListByResourceGroupAsync(options.ResourceGroupName);
 
 				string regionName = null;
@@ -66,6 +73,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 				if(regionName == null)
 					throw new InvalidOperationException("Could not find an app that has a hostname created for domain " + domain + ".");
+
+				logger.LogInformation("Found region name to use: {0}.", regionName);
 
 				var certificateName = TagName + "_" + Guid.NewGuid();
 				azureCertificate = await client.WebApps.Manager
@@ -82,6 +91,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					tags.Add(tag.Key, tag.Value);
 
 				tags.Add(TagName, key);
+
+				logger.LogInformation("Updating tags: {0}.", tags);
 
 				await client.WebApps.Manager
 					.AppServiceCertificates
@@ -125,17 +136,18 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				.AppServiceCertificates
 				.ListByResourceGroupAsync(options.ResourceGroupName);
 
+			logger.LogInformation("Trying to find existing Azure certificate with key {0}.", key);
+
 			foreach (var certificate in certificates)
 			{
-				if (certificate.FriendlyName != LetsEncryptRenewalService.CertificateFriendlyName)
-					continue;
-
 				var tags = certificate.Tags;
 				if (!tags.ContainsKey(TagName) || tags[TagName] != key)
 					continue;
 
 				return certificate;
 			}
+
+			logger.LogInformation("Could not find existing Azure certificate.");
 
 			return null;
 		}
