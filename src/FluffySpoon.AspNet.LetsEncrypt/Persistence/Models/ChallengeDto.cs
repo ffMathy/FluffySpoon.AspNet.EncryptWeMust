@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence.Models
+﻿namespace FluffySpoon.AspNet.LetsEncrypt.Persistence.Models
 {
 	public class ChallengeDto
 	{

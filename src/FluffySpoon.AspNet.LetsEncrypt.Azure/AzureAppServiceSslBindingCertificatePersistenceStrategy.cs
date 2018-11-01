@@ -2,7 +2,6 @@
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 
 namespace FluffySpoon.LetsEncrypt.Azure
 {

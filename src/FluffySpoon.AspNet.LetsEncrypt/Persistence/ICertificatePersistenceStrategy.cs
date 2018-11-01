@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+﻿namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
 	public interface ICertificatePersistenceStrategy : IPersistenceStrategy
 	{
