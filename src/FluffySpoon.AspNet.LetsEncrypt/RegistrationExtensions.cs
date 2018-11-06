@@ -99,7 +99,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddHostedService<LetsEncryptRenewalService>();
 		}
 
-		public static void UseLetsEncryptChallengeApprovalMiddleware(
+		public static void UseFluffySpoonLetsEncryptChallengeApprovalMiddleware(
 			this IApplicationBuilder app)
 		{
 			app.UseMiddleware<LetsEncryptChallengeApprovalMiddleware>();

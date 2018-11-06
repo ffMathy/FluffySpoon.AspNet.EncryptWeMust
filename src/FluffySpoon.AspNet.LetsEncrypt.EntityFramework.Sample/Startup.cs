@@ -56,7 +56,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.UseLetsEncryptChallengeApprovalMiddleware();
+			app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
 
 			app.Run(async (context) =>
 			{

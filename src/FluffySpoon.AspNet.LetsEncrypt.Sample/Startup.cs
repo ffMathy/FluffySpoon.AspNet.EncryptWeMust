@@ -42,7 +42,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.UseLetsEncryptChallengeApprovalMiddleware();
+			app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
 
 			app.Run(async (context) =>
 			{
