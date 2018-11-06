@@ -1,5 +1,6 @@
 ﻿using FluffySpoon.LetsEncrypt.Azure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -10,7 +11,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			AzureOptions azureOptions)
 		{
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
-				(provider) => new AzureAppServiceSslBindingCertificatePersistenceStrategy(azureOptions));
+				(provider) => new AzureAppServiceSslBindingCertificatePersistenceStrategy(
+					azureOptions, 
+					provider.GetRequiredService<ILogger<AzureAppServiceSslBindingCertificatePersistenceStrategy>>()));
 		}
 	}
 }
