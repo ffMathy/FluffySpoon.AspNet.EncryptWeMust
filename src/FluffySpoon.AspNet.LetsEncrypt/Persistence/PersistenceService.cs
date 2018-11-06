@@ -19,12 +19,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<IChallengePersistenceStrategy> _challengePersistenceStrategies;
 
-		private readonly ILogger<PersistenceService> _logger;
+		private readonly ILogger<IPersistenceService> _logger;
 
 		public PersistenceService(
 			IEnumerable<ICertificatePersistenceStrategy> certificatePersistenceStrategies,
 			IEnumerable<IChallengePersistenceStrategy> challengePersistenceStrategies,
-			ILogger<PersistenceService> logger)
+			ILogger<IPersistenceService> logger)
 		{
 			_certificatePersistenceStrategies = certificatePersistenceStrategies;
 			_challengePersistenceStrategies = challengePersistenceStrategies;

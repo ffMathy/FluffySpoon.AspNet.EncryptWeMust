@@ -20,7 +20,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly IPersistenceService _persistenceService;
-		private readonly ILogger<LetsEncryptRenewalService> _logger;
+		private readonly ILogger<ILetsEncryptRenewalService> _logger;
 		private readonly LetsEncryptOptions _options;
 		private readonly SemaphoreSlim _semaphoreSlim;
 
@@ -37,7 +37,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		public LetsEncryptRenewalService(
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
 			IPersistenceService persistenceService,
-			ILogger<LetsEncryptRenewalService> logger,
+			ILogger<ILetsEncryptRenewalService> logger,
 			LetsEncryptOptions options)
 		{
 			_lifecycleHooks = lifecycleHooks;

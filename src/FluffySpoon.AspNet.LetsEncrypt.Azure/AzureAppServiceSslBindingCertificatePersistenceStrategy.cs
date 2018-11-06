@@ -13,17 +13,17 @@ namespace FluffySpoon.LetsEncrypt.Azure
 	using Microsoft.Extensions.Logging;
 	using Azure = Microsoft.Azure.Management.Fluent.Azure;
 
-	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy
+	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
 		private readonly AzureOptions options;
-		private readonly ILogger<AzureAppServiceSslBindingCertificatePersistenceStrategy> logger;
+		private readonly ILogger<IAzureAppServiceSslBindingCertificatePersistenceStrategy> logger;
 		private readonly IAzure client;
 
 		private const string TagName = "FluffySpoonAspNetLetsEncrypt";
 
 		public AzureAppServiceSslBindingCertificatePersistenceStrategy(
 			AzureOptions azureOptions,
-			ILogger<AzureAppServiceSslBindingCertificatePersistenceStrategy> logger)
+			ILogger<IAzureAppServiceSslBindingCertificatePersistenceStrategy> logger)
 		{
 			options = azureOptions;
 			this.logger = logger;
