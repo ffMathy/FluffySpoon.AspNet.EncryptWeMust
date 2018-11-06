@@ -2,15 +2,26 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions
 	{
+		private static void AddFluffySpoonLetsEncryptPersistenceService(
+			this IServiceCollection services)
+		{
+			if(services.Any(x => x.ServiceType == typeof(IPersistenceService)))
+				return;
+			
+			services.AddSingleton<IPersistenceService, PersistenceService>();
+		}
+
 		public static void AddFluffySpoonLetsEncryptRenewalLifecycleHook<TCertificateRenewalLifecycleHook>(
 			this IServiceCollection services) where TCertificateRenewalLifecycleHook : class, ICertificateRenewalLifecycleHook
 		{
+			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton<ICertificateRenewalLifecycleHook, TCertificateRenewalLifecycleHook>();
 		}
 
@@ -37,6 +48,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  this IServiceCollection services,
 		  Func<IServiceProvider, ICertificatePersistenceStrategy> certificatePersistenceStrategyFactory)
 		{
+			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(certificatePersistenceStrategyFactory);
 		}
 
@@ -71,6 +83,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  this IServiceCollection services,
 		  Func<IServiceProvider, IChallengePersistenceStrategy> certificatePersistenceStrategyFactory)
 		{
+			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(certificatePersistenceStrategyFactory);
 		}
 
@@ -94,6 +107,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  this IServiceCollection services,
 		  LetsEncryptOptions options)
 		{
+			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(options);
 			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
 			services.AddHostedService<LetsEncryptRenewalService>();
