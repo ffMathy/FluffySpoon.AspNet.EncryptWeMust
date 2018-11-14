@@ -1,4 +1,4 @@
-The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed.
+The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed. 
 
 `Install-Package FluffySpoon.AspNet.LetsEncrypt`
 
