@@ -103,10 +103,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				return;
 
 			await _semaphoreSlim.WaitAsync();
+
+			_logger.LogInformation("Checking to see if in-memory LetsEncrypt certificate needs renewal.");
+
 			try
 			{
 				if (IsCertificateValid)
 					return;
+
+				_logger.LogInformation("Checking to see if existing LetsEncrypt certificate has been persisted and is valid.");
 
 				var alreadyHasValidCertificate = await TryRetrievingValidPersistedSiteCertificateAsync();
 				if (alreadyHasValidCertificate)
