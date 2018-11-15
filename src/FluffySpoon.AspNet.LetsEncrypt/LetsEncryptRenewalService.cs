@@ -21,6 +21,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly IPersistenceService _persistenceService;
 		private readonly ILogger<ILetsEncryptRenewalService> _logger;
+
 		private readonly LetsEncryptOptions _options;
 		private readonly SemaphoreSlim _semaphoreSlim;
 
@@ -50,7 +51,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public void Dispose()
 		{
-			_logger.LogWarning("The LetsEncrypt middleware's background renewal thread is shutting down.");
 			_timer?.Dispose();
 		}
 
@@ -68,6 +68,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
+			_logger.LogWarning("The LetsEncrypt middleware's background renewal thread is shutting down.");
 			_timer?.Change(Timeout.Infinite, 0);
 
 			foreach (var lifecycleHook in _lifecycleHooks)
