@@ -57,7 +57,7 @@ Inject the middleware in the `Startup` class' `Configure` method as such:
 ```csharp
 public void Configure()
 {
-	app.UseLetsEncryptChallengeApprovalMiddleware();
+	app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
 }
 ```
 
