@@ -11,12 +11,14 @@ using Newtonsoft.Json;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
+	public enum PersistenceType {
+		Account,
+		Site,
+		Challenges
+	}
+
 	class PersistenceService : IPersistenceService
 	{
-		private const string AccountCertificateKey = "AccountCertificate";
-		private const string SiteCertificateKey = "SiteCertificate";
-		private const string ChallengeKey = "Challenges";
-
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<IChallengePersistenceStrategy> _challengePersistenceStrategies;
 
@@ -36,12 +38,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		{
 			var text = certificate.ToPem();
 			var bytes = Encoding.UTF8.GetBytes(text);
-			await PersistAsync(AccountCertificateKey, bytes, _certificatePersistenceStrategies);
+			await PersistAsync(PersistenceType.Account, bytes, _certificatePersistenceStrategies);
 		}
 
 		public async Task PersistSiteCertificateAsync(X509Certificate2 certificate)
 		{
-			await PersistAsync(SiteCertificateKey, certificate.RawData, _certificatePersistenceStrategies);
+			await PersistAsync(PersistenceType.Site, certificate.RawData, _certificatePersistenceStrategies);
 			_logger.LogInformation("Certificate persisted for later use.");
 		}
 
@@ -49,17 +51,17 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		{
 			var text = challenges == null ? null : JsonConvert.SerializeObject(challenges);
 			var bytes = text == null ? null : Encoding.UTF8.GetBytes(text);
-			await PersistAsync(ChallengeKey, bytes, _challengePersistenceStrategies);
+			await PersistAsync(PersistenceType.Challenges, bytes, _challengePersistenceStrategies);
 		}
 
-		private async Task PersistAsync(string key, byte[] bytes, IEnumerable<IPersistenceStrategy> strategies) {
-			var tasks = strategies.Select(x => x.PersistAsync(key, bytes ?? new byte[0]));
+		private async Task PersistAsync(PersistenceType persistenceType, byte[] bytes, IEnumerable<IPersistenceStrategy> strategies) {
+			var tasks = strategies.Select(x => x.PersistAsync(persistenceType, bytes ?? new byte[0]));
 			await Task.WhenAll(tasks);
 		}
 
 		public async Task<X509Certificate2> GetPersistedSiteCertificateAsync()
 		{
-			var bytes = await GetPersistedBytesAsync(SiteCertificateKey, _certificatePersistenceStrategies);
+			var bytes = await GetPersistedBytesAsync(PersistenceType.Site, _certificatePersistenceStrategies);
 			if (bytes == null)
 				return null;
 
@@ -68,7 +70,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task<IKey> GetPersistedAccountCertificateAsync()
 		{
-			var bytes = await GetPersistedBytesAsync(AccountCertificateKey, _certificatePersistenceStrategies);
+			var bytes = await GetPersistedBytesAsync(PersistenceType.Account, _certificatePersistenceStrategies);
 			if(bytes == null)
 				return null;
 
@@ -78,7 +80,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task<ChallengeDto[]> GetPersistedChallengesAsync()
 		{
-			var bytes = await GetPersistedBytesAsync(ChallengeKey, _challengePersistenceStrategies);
+			var bytes = await GetPersistedBytesAsync(PersistenceType.Challenges, _challengePersistenceStrategies);
 			if(bytes == null)
 				return Array.Empty<ChallengeDto>();
 
@@ -86,11 +88,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return JsonConvert.DeserializeObject<ChallengeDto[]>(text);
 		}
 
-		private async Task<byte[]> GetPersistedBytesAsync(string key, IEnumerable<IPersistenceStrategy> strategies)
+		private async Task<byte[]> GetPersistedBytesAsync(PersistenceType persistenceType, IEnumerable<IPersistenceStrategy> strategies)
 		{
 			foreach (var strategy in strategies)
 			{
-				var bytes = await strategy.RetrieveAsync(key);
+				var bytes = await strategy.RetrieveAsync(persistenceType);
 				if (bytes != null && bytes.Length > 0)
 					return bytes;
 			}

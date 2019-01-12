@@ -35,12 +35,22 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return Azure.Authenticate(options.Credentials).WithDefaultSubscription();
 		}
 
-		public async Task PersistAsync(string key, byte[] bytes)
+		public async Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
 		{
-			var azureCertificate = await GetExistingCertificateAsync(key);
+			if(bytes.Length == 0) {
+				logger.LogWarning("Tried to persist empty certificate.");
+				return;
+			}
+
+			if(persistenceType != PersistenceType.Site) {
+				logger.LogTrace("Skipping certificate persistence because a certificate of type {0} can't be persisted in Azure.", persistenceType);
+				return;
+			}
+
+			var azureCertificate = await GetExistingCertificateAsync(persistenceType);
 			if (azureCertificate != null)
 			{
-				logger.LogInformation("Updating existing Azure certificate for key {0}.", key);
+				logger.LogInformation("Updating existing Azure certificate for key {0}.", persistenceType);
 				await client.WebApps.Manager
 					.AppServiceCertificates
 					.Inner
@@ -55,15 +65,15 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			}
 			else
 			{
-				logger.LogDebug("Will create new Azure certificate for key {0}", key);
+				logger.LogDebug("Will create new Azure certificate for key {0} of {1} bytes", persistenceType, bytes.Length);
 
-				var certificate = new X509Certificate2(bytes);
+				var certificate = new X509Certificate2(bytes, "");
 
 				logger.LogTrace("Trying to fetch DnsName from created certificate.");
 
 				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
 
-				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", key, domain);
+				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", persistenceType, domain);
 
 				var apps = await client.WebApps.ListByResourceGroupAsync(options.ResourceGroupName);
 
@@ -95,7 +105,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				foreach(var tag in azureCertificate.Tags)
 					tags.Add(tag.Key, tag.Value);
 
-				tags.Add(TagName, key);
+				tags.Add(TagName, persistenceType.ToString());
 
 				logger.LogInformation("Updating tags: {0}.", tags);
 
@@ -129,24 +139,24 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			}
 		}
 
-		public async Task<byte[]> RetrieveAsync(string key)
+		public async Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
 		{
-			var certificate = await GetExistingCertificateAsync(key);
+			var certificate = await GetExistingCertificateAsync(persistenceType);
 			return certificate?.PfxBlob;
 		}
 
-		private async Task<IAppServiceCertificate> GetExistingCertificateAsync(string key)
+		private async Task<IAppServiceCertificate> GetExistingCertificateAsync(PersistenceType persistenceType)
 		{
 			var certificates = await client.WebApps.Manager
 				.AppServiceCertificates
 				.ListByResourceGroupAsync(options.ResourceGroupName);
 
-			logger.LogInformation("Trying to find existing Azure certificate with key {0}.", key);
+			logger.LogInformation("Trying to find existing Azure certificate with key {0}.", persistenceType);
 
 			foreach (var certificate in certificates)
 			{
 				var tags = certificate.Tags;
-				if (!tags.ContainsKey(TagName) || tags[TagName] != key)
+				if (!tags.ContainsKey(TagName) || tags[TagName] != persistenceType.ToString())
 					continue;
 
 				return certificate;

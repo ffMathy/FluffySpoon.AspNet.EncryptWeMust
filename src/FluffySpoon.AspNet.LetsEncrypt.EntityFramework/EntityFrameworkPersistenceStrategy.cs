@@ -11,8 +11,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 	{
 		public EntityFrameworkPersistenceStrategy(
 			ServiceProvider serviceProvider,
-			Func<TDbContext, string, byte[], Task> persistAsync,
-			Func<TDbContext, string, Task<byte[]>> retrieveAsync) : base(
+			Func<TDbContext, PersistenceType, byte[], Task> persistAsync,
+			Func<TDbContext, PersistenceType, Task<byte[]>> retrieveAsync) : base(
 				async (key, bytes) =>
 				{
 					using (var scope = serviceProvider.CreateScope())

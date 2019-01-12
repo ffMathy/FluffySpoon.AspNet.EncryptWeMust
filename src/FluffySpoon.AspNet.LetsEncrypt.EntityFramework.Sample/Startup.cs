@@ -21,11 +21,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 			services.AddFluffySpoonLetsEncryptEntityFrameworkCertificatePersistence<DatabaseContext>(
 				async (databaseContext, key, bytes) => databaseContext.Certificates.Add(new Certificate() { 
 					Bytes = bytes,
-					Key = key
+					Key = key.ToString()
 				}),
 				async (databaseContext, key) => databaseContext
 					.Certificates
-					.SingleOrDefault(x => x.Key == key)
+					.SingleOrDefault(x => x.Key == key.ToString())
 					?.Bytes);
 
 			services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()

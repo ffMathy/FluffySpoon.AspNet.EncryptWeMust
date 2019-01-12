@@ -5,39 +5,39 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
 	class MemoryPersistenceStrategy : ICertificatePersistenceStrategy, IChallengePersistenceStrategy
 	{
-		private IDictionary<string, byte[]> bytes;
+		private IDictionary<PersistenceType, byte[]> bytes;
 
 		public MemoryPersistenceStrategy()
 		{
-			bytes = new Dictionary<string, byte[]>();
+			bytes = new Dictionary<PersistenceType, byte[]>();
 		}
 
-		public Task PersistAsync(string key, byte[] bytes)
+		public Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
 		{
-			if (this.bytes.ContainsKey(key))
+			if (this.bytes.ContainsKey(persistenceType))
 			{
 				if (bytes == null)
 				{
-					this.bytes.Remove(key);
+					this.bytes.Remove(persistenceType);
 				}
 				else
 				{
-					this.bytes[key] = bytes;
+					this.bytes[persistenceType] = bytes;
 				}
 			} else {
 				if(bytes == null)
 					return Task.CompletedTask;
 				
-				this.bytes.Add(key, bytes);
+				this.bytes.Add(persistenceType, bytes);
 			}
 
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync(string key)
+		public Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
 		{
-			if(bytes.ContainsKey(key))
-				return Task.FromResult(bytes[key]);
+			if(bytes.ContainsKey(persistenceType))
+				return Task.FromResult(bytes[persistenceType]);
 
 			return Task.FromResult<byte[]>(null);
 		}
