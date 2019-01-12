@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -143,7 +144,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			await ValidateOrderAsync(order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
-			if(certificateBytes == null) {
+			if (certificateBytes == null)
+			{
 				throw new InvalidOperationException("The certificate from the order was null.");
 			}
 
@@ -257,15 +259,20 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			get
 			{
-				_logger.LogDebug("Checking certificate validity.");
-
-				var isNewEnoughAccordingToNotAfterTime = (_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
-					_options.TimeUntilExpiryBeforeRenewal);
-				var isNewEnoughAccordingToNotBeforeTime = (this._options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
-					this._options.TimeAfterIssueDateBeforeRenewal);
-				var isNewEnough = isNewEnoughAccordingToNotAfterTime &&
-					isNewEnoughAccordingToNotBeforeTime;
-				return Certificate != null && isNewEnough; ;
+				try
+				{
+					var isNewEnoughAccordingToNotAfterTime = (_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
+						_options.TimeUntilExpiryBeforeRenewal);
+					var isNewEnoughAccordingToNotBeforeTime = (this._options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
+						this._options.TimeAfterIssueDateBeforeRenewal);
+					var isNewEnough = isNewEnoughAccordingToNotAfterTime &&
+						isNewEnoughAccordingToNotBeforeTime;
+					return Certificate != null && isNewEnough;
+				}
+				catch (CryptographicException)
+				{
+					return false;
+				}
 			}
 		}
 
