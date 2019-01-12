@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -65,6 +66,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		public async Task<IKey> GetPersistedAccountCertificateAsync()
 		{
 			var bytes = await GetPersistedBytesAsync(AccountCertificateKey, _certificatePersistenceStrategies);
+			if(bytes == null)
+				return null;
+
 			var text = Encoding.UTF8.GetString(bytes);
 			return KeyFactory.FromPem(text);
 		}
@@ -72,6 +76,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		public async Task<ChallengeDto[]> GetPersistedChallengesAsync()
 		{
 			var bytes = await GetPersistedBytesAsync(ChallengeKey, _challengePersistenceStrategies);
+			if(bytes == null)
+				return Array.Empty<ChallengeDto>();
+
 			var text = Encoding.UTF8.GetString(bytes);
 			return JsonConvert.DeserializeObject<ChallengeDto[]>(text);
 		}
