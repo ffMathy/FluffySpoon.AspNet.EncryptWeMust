@@ -55,7 +55,12 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			}
 			else
 			{
+				logger.LogDebug("Will create new Azure certificate for key {0}", key);
+
 				var certificate = new X509Certificate2(bytes);
+
+				logger.LogTrace("Trying to fetch DnsName from created certificate.");
+
 				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
 
 				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", key, domain);
