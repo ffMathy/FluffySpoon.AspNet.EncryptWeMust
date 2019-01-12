@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
-	public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware1
+	public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
 	{
 		private readonly RequestDelegate _next;
 		private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
