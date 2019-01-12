@@ -1,6 +1,7 @@
 ﻿using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -110,7 +111,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(options);
 			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
-			services.AddHostedService<LetsEncryptRenewalService>();
+			services.AddTransient<IHostedService, LetsEncryptRenewalService>();
 		}
 
 		public static void UseFluffySpoonLetsEncryptChallengeApprovalMiddleware(

@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Management.AppService.Fluent" Version="1.17.0" />
-    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.17.0" />
+    <PackageReference Include="Microsoft.Azure.Management.AppService.Fluent" Version="1.18.0" />
+    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.18.0" />
   </ItemGroup>
 
   <ItemGroup>
