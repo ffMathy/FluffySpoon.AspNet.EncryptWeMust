@@ -147,6 +147,12 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 		private async Task<IAppServiceCertificate> GetExistingCertificateAsync(PersistenceType persistenceType)
 		{
+			if (persistenceType != PersistenceType.Site)
+			{
+				logger.LogTrace("Skipping certificate retrieval of a certificate of type {0}, which can't be persisted in Azure.", persistenceType);
+				return null;
+			}
+
 			var certificates = await client.WebApps.Manager
 				.AppServiceCertificates
 				.ListByResourceGroupAsync(options.ResourceGroupName);
