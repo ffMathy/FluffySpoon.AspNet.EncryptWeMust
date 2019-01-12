@@ -143,6 +143,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			await ValidateOrderAsync(order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
+			if(certificateBytes == null) {
+				throw new InvalidOperationException("The certificate from the order was null.");
+			}
+
 			var certificate = new X509Certificate2(certificateBytes);
 			await _persistenceService.PersistSiteCertificateAsync(certificate);
 
@@ -168,7 +172,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		private async Task UseExistingLetsEncryptAccount(IKey existingAccountKey)
 		{
 			_logger.LogDebug("Using existing LetsEncrypt account.");
-			
+
 			acme = new AcmeContext(LetsEncryptUri, existingAccountKey);
 			await acme.Account();
 		}
@@ -179,7 +183,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			acme = new AcmeContext(LetsEncryptUri);
 			await acme.NewAccount(_options.Email, true);
-			
+
 			await _persistenceService.PersistAccountCertificateAsync(acme.AccountKey);
 		}
 
@@ -207,7 +211,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			_logger.LogInformation("Validating all pending order authorizations.");
 
-			var challengeDtos = challengeContexts.Select(x => new ChallengeDto() {
+			var challengeDtos = challengeContexts.Select(x => new ChallengeDto()
+			{
 				Token = x.Token,
 				Response = x.KeyAuthz
 			}).ToArray();
@@ -248,11 +253,21 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return challenges;
 		}
 
-		private bool IsCertificateValid =>
-			Certificate != null &&
-			((_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
-			_options.TimeUntilExpiryBeforeRenewal) &&
-			(_options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
-			_options.TimeAfterIssueDateBeforeRenewal));
+		private bool IsCertificateValid
+		{
+			get
+			{
+				_logger.LogDebug("Checking certificate validity.");
+
+				var isNewEnoughAccordingToNotAfterTime = (_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
+					_options.TimeUntilExpiryBeforeRenewal);
+				var isNewEnoughAccordingToNotBeforeTime = (this._options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
+					this._options.TimeAfterIssueDateBeforeRenewal);
+				var isNewEnough = isNewEnoughAccordingToNotAfterTime &&
+					isNewEnoughAccordingToNotBeforeTime;
+				return Certificate != null && isNewEnough; ;
+			}
+		}
+
 	}
 }
