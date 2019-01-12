@@ -60,6 +60,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		public async Task<X509Certificate2> GetPersistedSiteCertificateAsync()
 		{
 			var bytes = await GetPersistedBytesAsync(SiteCertificateKey, _certificatePersistenceStrategies);
+			if (bytes == null)
+				return null;
+
 			return new X509Certificate2(bytes);
 		}
 
