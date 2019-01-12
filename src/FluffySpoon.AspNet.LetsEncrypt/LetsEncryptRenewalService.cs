@@ -261,13 +261,16 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			{
 				try
 				{
+					if(Certificate == null)
+						return false;
+
 					var isNewEnoughAccordingToNotAfterTime = (_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
 						_options.TimeUntilExpiryBeforeRenewal);
 					var isNewEnoughAccordingToNotBeforeTime = (this._options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
 						this._options.TimeAfterIssueDateBeforeRenewal);
 					var isNewEnough = isNewEnoughAccordingToNotAfterTime &&
 						isNewEnoughAccordingToNotBeforeTime;
-					return Certificate != null && isNewEnough;
+					return isNewEnough;
 				}
 				catch (CryptographicException)
 				{
