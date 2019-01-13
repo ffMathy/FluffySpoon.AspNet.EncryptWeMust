@@ -11,7 +11,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 		private const string KeyPrefix = "FluffySpoon_";
 
 		public DistributedCachePersistenceStrategy(
-			ILogger<DistributedCachePersistenceStrategy> logger,
+			ILogger logger,
 			IDistributedCache cache, 
 			TimeSpan expiry) : base(
 				async (key, bytes) =>

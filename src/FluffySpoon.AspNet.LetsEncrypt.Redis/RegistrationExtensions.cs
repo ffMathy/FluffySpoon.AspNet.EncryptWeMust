@@ -14,7 +14,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<ILogger<DistributedCachePersistenceStrategy>>(),
+					provider.GetRequiredService<ILogger>(),
 					provider.GetRequiredService<IDistributedCache>(), 
 					expiry));
 		}
@@ -25,7 +25,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptChallengePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<ILogger<DistributedCachePersistenceStrategy>>(),
+					provider.GetRequiredService<ILogger>(),
 					provider.GetRequiredService<IDistributedCache>(), 
 					expiry));
 		}
