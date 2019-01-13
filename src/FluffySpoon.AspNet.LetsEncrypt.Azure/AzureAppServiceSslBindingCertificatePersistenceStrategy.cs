@@ -78,12 +78,17 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				var apps = await client.WebApps.ListByResourceGroupAsync(options.ResourceGroupName);
 
 				string regionName = null;
-				foreach(var app in apps) {
-					if(!app.HostNames.Contains(domain))
+
+				var relevantApps = new HashSet<IWebApp>();
+				foreach(var app in apps)
+				{
+					logger.LogTrace("Checking hostnames of app {0} ({1}) against domain {2}.", app.Name, app.HostNames, domain);
+
+					if (!app.HostNames.Contains(domain))
 						continue;
 
 					regionName = app.RegionName;
-					break;
+					relevantApps.Add(app);
 				}
 
 				if(regionName == null)
@@ -120,11 +125,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							Tags = tags
 						});
 
-				foreach (var app in apps)
+				foreach (var app in relevantApps)
 				{
-					if (!app.HostNames.Contains(domain))
-						continue;
-
 					await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
 						options.ResourceGroupName,
 						app.Name,
