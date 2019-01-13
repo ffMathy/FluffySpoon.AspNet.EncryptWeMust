@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 {
@@ -8,11 +10,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 	{
 		private const string KeyPrefix = "FluffySpoon_";
 
-		public DistributedCachePersistenceStrategy(IDistributedCache cache, TimeSpan expiry) : base(
-			async (key, bytes) => await cache.SetAsync(KeyPrefix + key, bytes, new DistributedCacheEntryOptions() {
-				AbsoluteExpirationRelativeToNow = expiry
-			}), 
-			async (key) => await cache.GetAsync(KeyPrefix + key))
+		public DistributedCachePersistenceStrategy(
+			ILogger<DistributedCachePersistenceStrategy> logger,
+			IDistributedCache cache, 
+			TimeSpan expiry) : base(
+				async (key, bytes) =>
+				{
+					logger.LogInformation("Persisting " + key + " to distributed cache.");
+					await cache.SetAsync(KeyPrefix + key, bytes, new DistributedCacheEntryOptions()
+					{
+						AbsoluteExpirationRelativeToNow = expiry
+					});
+				},
+				async (key) => await cache.GetAsync(KeyPrefix + key))
 		{
 		}
 	}

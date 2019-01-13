@@ -1,6 +1,7 @@
 ﻿using FluffySpoon.AspNet.LetsEncrypt.Redis;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
@@ -13,7 +14,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<IDistributedCache>(), expiry));
+					provider.GetRequiredService<ILogger<DistributedCachePersistenceStrategy>>(),
+					provider.GetRequiredService<IDistributedCache>(), 
+					expiry));
 		}
 
 		public static void AddFluffySpoonLetsEncryptDistributedCacheChallengePersistence(
@@ -22,7 +25,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptChallengePersistence(
 				(provider) => new DistributedCachePersistenceStrategy(
-					provider.GetRequiredService<IDistributedCache>(), expiry));
+					provider.GetRequiredService<ILogger<DistributedCachePersistenceStrategy>>(),
+					provider.GetRequiredService<IDistributedCache>(), 
+					expiry));
 		}
 	}
 }
