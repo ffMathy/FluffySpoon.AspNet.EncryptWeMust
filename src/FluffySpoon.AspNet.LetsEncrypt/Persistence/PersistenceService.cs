@@ -57,6 +57,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		}
 
 		private async Task PersistAsync(PersistenceType persistenceType, byte[] bytes, IEnumerable<IPersistenceStrategy> strategies) {
+			_logger.LogTrace("Persisting {0} through strategies.", persistenceType);
+
 			var tasks = strategies.Select(x => x.PersistAsync(persistenceType, bytes ?? new byte[0]));
 			await Task.WhenAll(tasks);
 		}
