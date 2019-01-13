@@ -49,8 +49,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task PersistChallengesAsync(ChallengeDto[] challenges)
 		{
-			var text = challenges == null ? null : JsonConvert.SerializeObject(challenges);
-			var bytes = text == null ? null : Encoding.UTF8.GetBytes(text);
+			var json = challenges == null ? null : JsonConvert.SerializeObject(challenges);
+			_logger.LogDebug("Persisting challenges {0}", json);
+
+			var bytes = json == null ? null : Encoding.UTF8.GetBytes(json);
 			await PersistAsync(PersistenceType.Challenges, bytes, _challengePersistenceStrategies);
 		}
 
