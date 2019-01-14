@@ -6,6 +6,7 @@ using Microsoft.Azure.Management.Fluent;
 namespace FluffySpoon.LetsEncrypt.Azure
 {
 	using System.Collections.Generic;
+	using System.IO;
 	using System.Security.Cryptography.X509Certificates;
 	using System.Threading.Tasks;
 	using FluffySpoon.AspNet.LetsEncrypt;
@@ -59,7 +60,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 						azureCertificate.Name,
 						new CertificatePatchResource()
 						{
-							Password = string.Empty,
+							Password = nameof(FluffySpoon),
 							PfxBlob = bytes
 						});
 			}
@@ -68,6 +69,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				logger.LogDebug("Will create new Azure certificate for key {0} of {1} bytes", persistenceType, bytes.Length);
 
 				var certificate = new X509Certificate2(bytes, nameof(FluffySpoon));
+				var certificateWithPasswordBytes = certificate.Export(X509ContentType.Pfx, nameof(FluffySpoon));
+				
 				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
 
 				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", persistenceType, domain);
@@ -99,7 +102,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					.Define(certificateName)
 					.WithRegion(regionName)
 					.WithExistingResourceGroup(options.ResourceGroupName)
-					.WithPfxByteArray()
+					.WithPfxByteArray(certificateWithPasswordBytes)
 					.WithPfxPassword(nameof(FluffySpoon))
 					.CreateAsync();
 

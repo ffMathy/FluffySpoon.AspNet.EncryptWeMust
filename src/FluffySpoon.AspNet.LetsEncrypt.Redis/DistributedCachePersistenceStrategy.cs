@@ -16,13 +16,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 			TimeSpan expiry) : base(
 				async (key, bytes) =>
 				{
-					logger.LogInformation("Persisting {0} to distributed cache.", key);
 					await cache.SetAsync(KeyPrefix + key, bytes, new DistributedCacheEntryOptions()
 					{
 						AbsoluteExpirationRelativeToNow = expiry
 					});
 				},
-				async (key) => await cache.GetAsync(KeyPrefix + key))
+				async (key) => {
+					return await cache.GetAsync(KeyPrefix + key);
+				})
 		{
 		}
 	}

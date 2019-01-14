@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -199,9 +200,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				privateKey);
 
 			var pfxBuilder = certificateChain.ToPfx(privateKey);
-			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, nameof(FluffySpoon));
+			pfxBuilder.FullChain = true;
+
+			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, string.Empty);
 
 			_logger.LogInformation("Certificate acquired.");
+
 			return pfxBytes;
 		}
 
