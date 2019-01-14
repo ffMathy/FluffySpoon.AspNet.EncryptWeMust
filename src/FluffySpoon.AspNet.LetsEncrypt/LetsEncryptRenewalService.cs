@@ -199,7 +199,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				privateKey);
 
 			var pfxBuilder = certificateChain.ToPfx(privateKey);
-			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, string.Empty);
+			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, nameof(FluffySpoon));
 
 			_logger.LogInformation("Certificate acquired.");
 			return pfxBytes;

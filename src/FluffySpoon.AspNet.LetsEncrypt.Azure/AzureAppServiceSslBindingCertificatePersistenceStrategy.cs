@@ -67,10 +67,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			{
 				logger.LogDebug("Will create new Azure certificate for key {0} of {1} bytes", persistenceType, bytes.Length);
 
-				var certificate = new X509Certificate2(bytes, "");
-
-				logger.LogTrace("Trying to fetch DnsName from created certificate.");
-
+				var certificate = new X509Certificate2(bytes, nameof(FluffySpoon));
 				var domain = certificate.GetNameInfo(X509NameType.DnsName, false);
 
 				logger.LogInformation("Creating new Azure certificate for key {0} and domain {1}.", persistenceType, domain);
@@ -102,8 +99,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					.Define(certificateName)
 					.WithRegion(regionName)
 					.WithExistingResourceGroup(options.ResourceGroupName)
-					.WithPfxByteArray(bytes)
-					.WithPfxPassword(string.Empty)
+					.WithPfxByteArray()
+					.WithPfxPassword(nameof(FluffySpoon))
 					.CreateAsync();
 
 				var tags = new Dictionary<string, string>();
