@@ -32,6 +32,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddFluffySpoonLetsEncryptCertificatePersistence(
 				(provider) => new AzureAppServiceSslBindingCertificatePersistenceStrategy(
 					azureOptions,
+					provider.GetRequiredService<LetsEncryptOptions>(),
 					provider.GetRequiredService<ILogger<IAzureAppServiceSslBindingCertificatePersistenceStrategy>>()));
 		}
 	}

@@ -69,7 +69,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			if (bytes == null)
 				return null;
 
-			return new X509Certificate2(bytes);
+			return new X509Certificate2(bytes, nameof(FluffySpoon));
 		}
 
 		public async Task<IKey> GetPersistedAccountCertificateAsync()
