@@ -12,6 +12,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		Task<X509Certificate2> GetPersistedSiteCertificateAsync();
 		Task PersistAccountCertificateAsync(IKey certificate);
 		Task PersistChallengesAsync(ChallengeDto[] challenges);
-		Task PersistSiteCertificateAsync(X509Certificate2 certificate);
+		Task PersistSiteCertificateAsync(byte[] certificateBytes);
 	}
 }

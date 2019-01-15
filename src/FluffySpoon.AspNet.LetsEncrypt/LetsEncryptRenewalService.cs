@@ -150,10 +150,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				throw new InvalidOperationException("The certificate from the order was null.");
 			}
 
-			var certificate = new X509Certificate2(certificateBytes);
-			await _persistenceService.PersistSiteCertificateAsync(certificate);
+			await _persistenceService.PersistSiteCertificateAsync(certificateBytes);
 
-			Certificate = certificate;
+			Certificate = new X509Certificate2(certificateBytes, nameof(FluffySpoon));
 		}
 
 		private async Task AuthenticateAsync()
@@ -202,7 +201,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var pfxBuilder = certificateChain.ToPfx(privateKey);
 			pfxBuilder.FullChain = true;
 
-			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, string.Empty);
+			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, nameof(FluffySpoon));
 
 			_logger.LogInformation("Certificate acquired.");
 

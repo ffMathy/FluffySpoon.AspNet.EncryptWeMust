@@ -41,9 +41,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			await PersistAsync(PersistenceType.Account, bytes, _certificatePersistenceStrategies);
 		}
 
-		public async Task PersistSiteCertificateAsync(X509Certificate2 certificate)
+		public async Task PersistSiteCertificateAsync(byte[] rawCertificate)
 		{
-			await PersistAsync(PersistenceType.Site, certificate.RawData, _certificatePersistenceStrategies);
+			await PersistAsync(PersistenceType.Site, rawCertificate, _certificatePersistenceStrategies);
 			_logger.LogInformation("Certificate persisted for later use.");
 		}
 
