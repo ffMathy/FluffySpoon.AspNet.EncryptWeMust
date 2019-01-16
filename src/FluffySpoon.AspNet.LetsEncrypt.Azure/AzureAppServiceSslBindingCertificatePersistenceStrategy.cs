@@ -110,6 +110,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							HostNames = domains,
 							PfxBlob = bytes
 						});
+				azureCertificate = await GetExistingCertificateAsync(persistenceType);
 			}
 			else
 			{
