@@ -150,12 +150,15 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			{
 				string[] domainsToUpgrade;
 				if(azureOptions.Slot == null) {
+					logger.LogInformation("Updating host name bindings for app {0}", appTuple.App.Name);
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
 						.Where(domains.Contains)
 						.ToArray();
-				} else {
+				} else
+				{
+					logger.LogInformation("Updating host name bindings for app {0}/{1}", appTuple.App.Name, appTuple.Slot.Name);
 					domainsToUpgrade = appTuple
 						.Slot
 						.HostNames
