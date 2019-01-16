@@ -107,6 +107,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 						new CertificatePatchResource()
 						{
 							Password = nameof(FluffySpoon),
+							HostNames = domains,
 							PfxBlob = bytes
 						});
 			}
@@ -163,6 +164,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 				foreach (var domain in domainsToUpgrade)
 				{
+					logger.LogDebug("Updating host name bindings for domain {0}", domain);
+
 					if (azureOptions.Slot == null)
 					{
 						await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
@@ -180,7 +183,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					{
 						await client.WebApps.Inner.CreateOrUpdateHostNameBindingSlotWithHttpMessagesAsync(
 							azureOptions.ResourceGroupName,
-							appTuple.Slot.Name,
+							appTuple.App.Name,
 							domain,
 							new HostNameBindingInner(
 								azureResourceType: AzureResourceType.Website,
@@ -188,7 +191,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 								customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
 								sslState: SslState.SniEnabled,
 								thumbprint: azureCertificate.Thumbprint),
-							azureOptions.Slot);
+							appTuple.Slot.Name);
 					}
 				}
 			}
