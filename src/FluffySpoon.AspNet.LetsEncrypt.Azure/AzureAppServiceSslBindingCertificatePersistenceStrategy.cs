@@ -64,16 +64,31 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			string regionName = null;
 
-			var relevantApps = new HashSet<IWebApp>();
+			var relevantApps = new HashSet<(IWebApp App, IDeploymentSlot Slot)>();
 			foreach (var app in apps)
 			{
 				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, domains);
-				
-				if (!app.HostNames.Any(domains.Contains))
-					continue;
+
+				if (azureOptions.Slot == null)
+				{
+					if (!app.HostNames.Any(domains.Contains))
+						continue;
+
+					relevantApps.Add((app, null));
+				} else {
+					var slots = app.DeploymentSlots
+						.List()
+						.Where(x => x
+							.HostNames
+							.Any(domains.Contains));
+					if(!slots.Any())
+						continue;
+
+					foreach(var slot in slots)
+						relevantApps.Add((app, slot));
+				}
 
 				regionName = app.RegionName;
-				relevantApps.Add(app);
 			}
 
 			if (regionName == null)
@@ -129,19 +144,43 @@ namespace FluffySpoon.LetsEncrypt.Azure
 						});
 			}
 
-			foreach (var app in relevantApps)
+			foreach (var appTuple in relevantApps)
 			{
-				var domainsToUpgrade = app.HostNames
-					.Where(domains.Contains)
-					.ToArray();
+				string[] domainsToUpgrade;
+				if(azureOptions.Slot == null) {
+					domainsToUpgrade = appTuple
+						.App
+						.HostNames
+						.Where(domains.Contains)
+						.ToArray();
+				} else {
+					domainsToUpgrade = appTuple
+						.Slot
+						.HostNames
+						.Where(domains.Contains)
+						.ToArray();
+				}
 
 				foreach (var domain in domainsToUpgrade)
 				{
-					if (azureOptions.Slot != null)
+					if (azureOptions.Slot == null)
+					{
+						await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
+							azureOptions.ResourceGroupName,
+							appTuple.App.Name,
+							domain,
+							new HostNameBindingInner(
+								azureResourceType: AzureResourceType.Website,
+								hostNameType: HostNameType.Verified,
+								customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
+								sslState: SslState.SniEnabled,
+								thumbprint: azureCertificate.Thumbprint));
+					}
+					else
 					{
 						await client.WebApps.Inner.CreateOrUpdateHostNameBindingSlotWithHttpMessagesAsync(
 							azureOptions.ResourceGroupName,
-							app.Name,
+							appTuple.Slot.Name,
 							domain,
 							new HostNameBindingInner(
 								azureResourceType: AzureResourceType.Website,
@@ -150,19 +189,6 @@ namespace FluffySpoon.LetsEncrypt.Azure
 								sslState: SslState.SniEnabled,
 								thumbprint: azureCertificate.Thumbprint),
 							azureOptions.Slot);
-					}
-					else
-					{
-						await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
-							azureOptions.ResourceGroupName,
-							app.Name,
-							domain,
-							new HostNameBindingInner(
-								azureResourceType: AzureResourceType.Website,
-								hostNameType: HostNameType.Verified,
-								customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
-								sslState: SslState.SniEnabled,
-								thumbprint: azureCertificate.Thumbprint));
 					}
 				}
 			}
