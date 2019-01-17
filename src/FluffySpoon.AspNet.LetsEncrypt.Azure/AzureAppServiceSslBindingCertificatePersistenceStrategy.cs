@@ -23,7 +23,18 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		private readonly ILogger<IAzureAppServiceSslBindingCertificatePersistenceStrategy> logger;
 		private readonly IAzure client;
 
-		private const string TagName = "FluffySpoonAspNetLetsEncrypt";
+		private string TagName
+		{
+			get
+			{
+				const string prefix = "FluffySpoonAspNetLetsEncrypt";
+
+				var domainsTag = letsEncryptOptions
+					.Domains
+					.Aggregate(string.Empty, (a, b) => a + "," + b);
+				return prefix + "_" + domainsTag;
+			}
+		}
 
 		public AzureAppServiceSslBindingCertificatePersistenceStrategy(
 			AzureOptions azureOptions,
@@ -75,16 +86,18 @@ namespace FluffySpoon.LetsEncrypt.Azure
 						continue;
 
 					relevantApps.Add((app, null));
-				} else {
+				}
+				else
+				{
 					var slots = app.DeploymentSlots
 						.List()
 						.Where(x => x
 							.HostNames
 							.Any(domains.Contains));
-					if(!slots.Any())
+					if (!slots.Any())
 						continue;
 
-					foreach(var slot in slots)
+					foreach (var slot in slots)
 						relevantApps.Add((app, slot));
 				}
 
@@ -149,14 +162,16 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			foreach (var appTuple in relevantApps)
 			{
 				string[] domainsToUpgrade;
-				if(azureOptions.Slot == null) {
+				if (azureOptions.Slot == null)
+				{
 					logger.LogInformation("Updating host name bindings for app {0}", appTuple.App.Name);
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
 						.Where(domains.Contains)
 						.ToArray();
-				} else
+				}
+				else
 				{
 					logger.LogInformation("Updating host name bindings for app {0}/{1}", appTuple.App.Name, appTuple.Slot.Name);
 					domainsToUpgrade = appTuple

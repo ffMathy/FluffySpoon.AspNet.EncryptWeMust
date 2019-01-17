@@ -121,7 +121,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				await AuthenticateAsync();
 
-				var domains = _options.Domains.ToArray();
+				var domains = _options.Domains?.ToArray() ?? Array.Empty<string>();
 				await AcquireNewCertificateForDomains(domains);
 			}
 			catch (Exception ex)
