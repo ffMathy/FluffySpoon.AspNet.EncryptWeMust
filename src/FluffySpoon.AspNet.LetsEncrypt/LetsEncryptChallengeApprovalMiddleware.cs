@@ -32,7 +32,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			const string magicPrefix = "/.well-known/acme-challenge/";
 			if (path.StartsWith(magicPrefix))
 			{
-				_logger.LogDebug("Challenge invoked: {0}", path);
+				_logger.LogDebug("Challenge invoked: {challengePath}", path);
 
 				var requestedToken = path.Substring(magicPrefix.Length);
 
@@ -40,7 +40,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
 				if (matchingChallenge == null)
 				{
-					_logger.LogInformation("The given challenge did not match: {0}", path);
+					_logger.LogInformation("The given challenge did not match {challengePath} among {allChallenges}", path, allChallenges);
 
 					await _next(context);
 					return;
