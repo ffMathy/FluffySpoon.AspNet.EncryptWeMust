@@ -264,19 +264,20 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			{
 				try
 				{
-					if(Certificate == null)
+					if (Certificate == null)
 						return false;
-
-					var isNewEnoughAccordingToNotAfterTime = (_options.TimeUntilExpiryBeforeRenewal == null || Certificate.NotAfter - DateTime.Now >
-						_options.TimeUntilExpiryBeforeRenewal);
-					var isNewEnoughAccordingToNotBeforeTime = (this._options.TimeAfterIssueDateBeforeRenewal == null || DateTime.Now - Certificate.NotBefore >
-						this._options.TimeAfterIssueDateBeforeRenewal);
-					var isNewEnough = isNewEnoughAccordingToNotAfterTime &&
-						isNewEnoughAccordingToNotBeforeTime;
-					return isNewEnough;
+					else if (_options.TimeUntilExpiryBeforeRenewal != null && Certificate.NotAfter - DateTime.Now < _options.TimeUntilExpiryBeforeRenewal)
+						return false;
+					else if (_options.TimeAfterIssueDateBeforeRenewal != null && DateTime.Now - Certificate.NotBefore > _options.TimeAfterIssueDateBeforeRenewal)
+						return false;
+					else if (Certificate.NotBefore > DateTime.Now || Certificate.NotAfter < DateTime.Now)
+						return false;
+					else
+						return true;
 				}
-				catch (CryptographicException)
+				catch (CryptographicException exc)
 				{
+					_logger.LogError(exc, "Exception occured during certificate validation");
 					return false;
 				}
 			}
