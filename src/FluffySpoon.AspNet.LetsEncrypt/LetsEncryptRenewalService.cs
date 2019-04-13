@@ -141,7 +141,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			var order = await acme.NewOrder(domains);
+		        IOrderContext order = null;
+		        try
+		        {
+			    order = await acme.NewOrder(domains);
+		        }
+		        catch (Certes.AcmeRequestException ex)
+		        {
+			    _logger.LogError(ex, ex.Message);
+		        }
 			await ValidateOrderAsync(order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
