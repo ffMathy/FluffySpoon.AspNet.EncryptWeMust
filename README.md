@@ -1,14 +1,14 @@
-The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed. 
+The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed.
 
 `Install-Package FluffySpoon.AspNet.LetsEncrypt`
- 
+
 # Requirements
 - Kestrel (which is default)
 - ASP .NET Core 2.1+
 - An always-on app-pool
 
 ## Getting an always-on app pool
-This is required because the renewal job runs on a background thread and polls once every hour to see if the certificate needs renewal (this is a very cheap operation). 
+This is required because the renewal job runs on a background thread and polls once every hour to see if the certificate needs renewal (this is a very cheap operation).
 
 It can be enabled using __just one__ the following techniques:
 - Enabling Always On if using Azure App Service.
@@ -67,7 +67,7 @@ Finally, to make Kestrel automatically select the LetsEncrypt certificate, we mu
 ```csharp
 WebHost.CreateDefaultBuilder(args)
 	.UseKestrel(kestrelOptions => kestrelOptions.ConfigureHttpsDefaults(
-			httpsOptions => httpsOptions.ServerCertificateSelector = 
+			httpsOptions => httpsOptions.ServerCertificateSelector =
 				(c, s) => LetsEncryptRenewalService.Certificate))
 	.UseUrls("http://" + DomainToUse, "https://" + DomainToUse)
 	.UseStartup<Startup>();
@@ -148,6 +148,42 @@ Requires:
 services.AddFluffySpoonLetsEncryptDistributedCertificatePersistence(expiry: TimeSpan.FromDays(30));
 services.AddFluffySpoonLetsEncryptDistributedChallengePersistence(expiry: TimeSpan.FromHours(1));
 ```
+
+# Azure App Service
+
+Using this project when running as an Azure App Service requires a few things.
+
+Firstly the App Service Plan needs to have the "Custom domains / SSL" feature (currently B1 for testing, S1 for production are the lowest supported).
+
+Secondly you should use the `AzureAppServiceSslBindingCertificatePersistenceStrategy` strategy:
+
+```csharp
+services.AddFluffySpoonLetsEncryptAzureAppServiceSslBindingCertificatePersistence(
+  new AzureOptions {
+    ResourceGroupName = ..., // The resource group the App Service is deployed to
+    Credentials = ... // Get some credentials that have access to Azure
+  });
+```
+
+The credentials supplied above need to have access to create certificates and set SSL bindings for the App Service. The permissions to create certificates is for the resource group and they are created as resources in the group, not in the App Service itself. The SSL bindings are set on the App Service. Bottom line is that you can achieve this by granting the [Website Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#website-contributor) to whatever principal you wish to use (the credentials in the snippet above).
+
+The easiest way to get some usable credentials is to use a [System Assigned Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview). This can be enabled on an App Service as described [here](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity).
+
+Having done that the following snippet sets this up:
+
+```csharp
+var managedIdentityCredentials = new AzureCredentialsFactory().FromMSI(new MSILoginInformation(MSIResourceType.AppService),
+                                                                       AzureEnvironment.AzureGlobalCloud);
+
+services.AddFluffySpoonLetsEncryptAzureAppServiceSslBindingCertificatePersistence(
+  new AzureOptions {
+    ResourceGroupName = System.Environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP"),
+    Credentials = managedIdentityCredentials
+  });
+```
+
+The resource group for the App Service can also easily be accessed through an environment variable, as specified above.
+
 
 # Hooking into events
 You can register a an `ICertificateRenewalLifecycleHook` implementation which does something when certain events occur, as shown below. This can be useful if you need to notify a Slack channel or send an e-mail if an error occurs, or when the certificate has indeed been renewed.
