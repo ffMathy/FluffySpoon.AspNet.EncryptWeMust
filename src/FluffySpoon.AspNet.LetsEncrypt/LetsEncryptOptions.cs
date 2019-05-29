@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Certes;
 
@@ -32,5 +32,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// Required. Sent to LetsEncrypt to let them know what details you want in your certificate. Some of the properties are optional.
 		/// </summary>
 		public CsrInfo CertificateSigningRequest { get; set; }
+
+		/// <summary>
+		/// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
+		/// </summary>
+		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.LogAndContinue;
 	}
 }

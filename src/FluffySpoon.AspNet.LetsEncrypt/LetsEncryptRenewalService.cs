@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -65,7 +65,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
-			_timer = new Timer(async (state) => await RunOnceAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
+			_timer = new Timer(async (state) => await RunOnceWithErrorHandlingAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
@@ -97,6 +97,21 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			_logger.LogInformation("A persisted but expired LetsEncrypt certificate was found and will be renewed.");
 
 			return false;
+		}
+
+		private async Task RunOnceWithErrorHandlingAsync()
+		{
+			try
+			{
+				await RunOnceAsync();
+				_timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
+			}
+			catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled)
+			{
+				_logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
+				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry)
+					_timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromMinutes(1));
+			}
 		}
 
 		public async Task RunOnceAsync()
