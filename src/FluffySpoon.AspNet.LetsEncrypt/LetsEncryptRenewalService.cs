@@ -65,8 +65,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
-            _timer = new Timer(async (state) => RunOnceWithErrorHandling(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
-        }
+			_timer = new Timer(async (state) => RunOnceWithErrorHandling(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
+		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
@@ -99,24 +99,24 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return false;
 		}
 
-        private async Task RunOnceWithErrorHandling()
-        {
-            try
-            {
-                await RunOnceAsync();
-                _timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
-            }
-            catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled)
-            {
-                _logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
-                if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry)
-                    _timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromMinutes(1));
-            }
-        }
+		private async Task RunOnceWithErrorHandling()
+		{
+			try
+			{
+				await RunOnceAsync();
+				_timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
+			}
+			catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled)
+			{
+				_logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
+				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry)
+					_timer.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromMinutes(1));
+			}
+		}
 
-        public async Task RunOnceAsync()
-        {
-            if (_semaphoreSlim.CurrentCount == 0)
+		public async Task RunOnceAsync()
+		{
+			if (_semaphoreSlim.CurrentCount == 0)
 				return;
 
 			await _semaphoreSlim.WaitAsync();

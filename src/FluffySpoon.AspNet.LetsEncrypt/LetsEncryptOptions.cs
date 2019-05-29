@@ -33,9 +33,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// </summary>
 		public CsrInfo CertificateSigningRequest { get; set; }
 
-        /// <summary>
-        /// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
-        /// </summary>
-        public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.Unhandled;
+		/// <summary>
+		/// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
+		/// </summary>
+		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.Unhandled;
 	}
 }

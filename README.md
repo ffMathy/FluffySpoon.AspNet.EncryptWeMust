@@ -1,14 +1,14 @@
-The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed.
+The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed. 
 
 `Install-Package FluffySpoon.AspNet.LetsEncrypt`
-
+ 
 # Requirements
 - Kestrel (which is default)
 - ASP .NET Core 2.1+
 - An always-on app-pool
 
 ## Getting an always-on app pool
-This is required because the renewal job runs on a background thread and polls once every hour to see if the certificate needs renewal (this is a very cheap operation).
+This is required because the renewal job runs on a background thread and polls once every hour to see if the certificate needs renewal (this is a very cheap operation). 
 
 It can be enabled using __just one__ the following techniques:
 - Enabling Always On if using Azure App Service.
@@ -67,7 +67,7 @@ Finally, to make Kestrel automatically select the LetsEncrypt certificate, we mu
 ```csharp
 WebHost.CreateDefaultBuilder(args)
 	.UseKestrel(kestrelOptions => kestrelOptions.ConfigureHttpsDefaults(
-			httpsOptions => httpsOptions.ServerCertificateSelector =
+			httpsOptions => httpsOptions.ServerCertificateSelector = 
 				(c, s) => LetsEncryptRenewalService.Certificate))
 	.UseUrls("http://" + DomainToUse, "https://" + DomainToUse)
 	.UseStartup<Startup>();
