@@ -65,7 +65,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
-			_timer = new Timer(async (state) => RunOnceWithErrorHandling(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
+			_timer = new Timer(async (state) => await RunOnceWithErrorHandlingAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
@@ -99,7 +99,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return false;
 		}
 
-		private async Task RunOnceWithErrorHandling()
+		private async Task RunOnceWithErrorHandlingAsync()
 		{
 			try
 			{
