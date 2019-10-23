@@ -279,7 +279,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			while (true)
 			{
-				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending))
+				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending || x.Status == ChallengeStatus.Processing))
 					break;
 
 				await Task.Delay(1000);
