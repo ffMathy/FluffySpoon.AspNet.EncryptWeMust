@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
@@ -21,16 +22,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 	{
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<IChallengePersistenceStrategy> _challengePersistenceStrategies;
+		private readonly IEnumerable<IDnsChallengePersistenceStrategy> _dnsChallengePersistenceStrategies;
 
 		private readonly ILogger<IPersistenceService> _logger;
 
 		public PersistenceService(
 			IEnumerable<ICertificatePersistenceStrategy> certificatePersistenceStrategies,
 			IEnumerable<IChallengePersistenceStrategy> challengePersistenceStrategies,
+			IEnumerable<IDnsChallengePersistenceStrategy> dnsChallengePersistenceStrategies,
 			ILogger<IPersistenceService> logger)
 		{
 			_certificatePersistenceStrategies = certificatePersistenceStrategies;
 			_challengePersistenceStrategies = challengePersistenceStrategies;
+			_dnsChallengePersistenceStrategies = dnsChallengePersistenceStrategies;
 			_logger = logger;
 		}
 
@@ -49,11 +53,44 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task PersistChallengesAsync(ChallengeDto[] challenges)
 		{
-			var json = challenges == null ? null : JsonConvert.SerializeObject(challenges);
+			var httpChallenges = challenges?.Where(x => x.Type == ChallengeType.Http01).ToArray();
+			var json = httpChallenges == null ? null : JsonConvert.SerializeObject(httpChallenges);
 			_logger.LogDebug("Persisting challenges {0}", json);
 
 			var bytes = json == null ? null : Encoding.UTF8.GetBytes(json);
 			await PersistAsync(PersistenceType.Challenges, bytes, _challengePersistenceStrategies);
+
+			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
+			foreach (var dnsChallenge in dnsChallenges)
+			{
+				_logger.LogTrace($"Persisting DNS challenge through {_dnsChallengePersistenceStrategies.Count()} possible strategies");
+
+				foreach (var domain in dnsChallenge.Domains) {
+					var dnsName = Regex.Replace(domain, "^\\*\\.", String.Empty);
+					dnsName = $"_acme-challenge.{dnsName}";
+
+					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.PersistAsync(dnsName, "TXT", dnsChallenge.Token));
+					await Task.WhenAll(tasks);
+				}
+			}
+		}
+
+		public async Task DeleteChallengesAsync(ChallengeDto[] challenges)
+		{
+			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
+			foreach (var dnsChallenge in dnsChallenges)
+			{
+				_logger.LogTrace($"Deleting DNS challenge through {_dnsChallengePersistenceStrategies.Count()} possible strategies");
+
+				foreach (var domain in dnsChallenge.Domains)
+				{
+					var dnsName = Regex.Replace(domain, "^\\*\\.", String.Empty);
+					dnsName = $"_acme-challenge.{dnsName}";
+
+					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, "TXT"));
+					await Task.WhenAll(tasks);
+				}
+			}
 		}
 
 		private async Task PersistAsync(PersistenceType persistenceType, byte[] bytes, IEnumerable<IPersistenceStrategy> strategies) {

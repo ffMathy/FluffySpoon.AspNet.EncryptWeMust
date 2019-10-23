@@ -156,8 +156,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
+			// Check for wildcard
+			if (!_options.ChallengeTypes.HasFlag(ChallengeType.Dns01) && domains.Any(x => x.StartsWith("*.")))
+				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but DNS challenge/validation is not enabled.");
+
 			var order = await acme.NewOrder(domains);
-			await ValidateOrderAsync(order);
+			await ValidateOrderAsync(domains, order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
 			if (certificateBytes == null)
@@ -178,7 +182,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var existingAccountKey = await _persistenceService.GetPersistedAccountCertificateAsync();
 			if (existingAccountKey != null)
 			{
-				await UseExistingLetsEncryptAccount(existingAccountKey);
+				await	UseExistingLetsEncryptAccount(existingAccountKey);
 			}
 			else
 			{
@@ -223,24 +227,36 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return pfxBytes;
 		}
 
-		private async Task ValidateOrderAsync(IOrderContext order)
+		private async Task ValidateOrderAsync(string[] domains, IOrderContext order)
 		{
 			var allAuthorizations = await order.Authorizations();
-			var challengeContexts = await Task.WhenAll(
-				allAuthorizations.Select(x => x.Http()));
+			var challengeContextTasks = new List<Task<IChallengeContext>>();
+
+			if (_options.ChallengeTypes.HasFlag(ChallengeType.Http01))
+				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
+
+			if (_options.ChallengeTypes.HasFlag(ChallengeType.Dns01))
+				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
+
+			var challengeContexts = await Task.WhenAll(challengeContextTasks);
 
 			_logger.LogInformation("Validating all pending order authorizations.");
 
-			var challengeDtos = challengeContexts.Select(x => new ChallengeDto()
+			var challengeDtos = challengeContexts.Where(x => x != null).Select(x => new ChallengeDto()
 			{
-				Token = x.Token,
-				Response = x.KeyAuthz
+				Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
+				Response = x.KeyAuthz,
+				Type = x.Type == ChallengeTypes.Dns01 ? ChallengeType.Dns01 : ChallengeType.Http01,
+				Domains = domains
 			}).ToArray();
 			await _persistenceService.PersistChallengesAsync(challengeDtos);
 
 			try
 			{
 				var challenges = await ValidateChallengesAsync(challengeContexts);
+
+				await _persistenceService.DeleteChallengesAsync(challengeDtos);
+
 				var challengeExceptions = challenges
 					.Where(x => x.Status == ChallengeStatus.Invalid)
 					.Select(x => new Exception(x.Error.Type + ": " + x.Error.Detail))

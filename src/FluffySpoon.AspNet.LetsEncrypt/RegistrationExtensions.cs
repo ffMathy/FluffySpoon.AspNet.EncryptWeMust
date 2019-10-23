@@ -119,5 +119,32 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			app.UseMiddleware<LetsEncryptChallengeApprovalMiddleware>();
 		}
+
+		public static void AddFluffySpoonLetsEncryptDnsChallengePersistence(
+		  this IServiceCollection services,
+		  Func<string, string, string, Task> persistAsync,
+		  Func<string, string, Task> deleteAsync)
+		{
+			AddFluffySpoonLetsEncryptDnsChallengePersistence(services,
+				new CustomDnsChallangePersistenceStrategy(
+					persistAsync,
+					deleteAsync));
+		}
+
+		public static void AddFluffySpoonLetsEncryptDnsChallengePersistence(
+		  this IServiceCollection services,
+		  IDnsChallengePersistenceStrategy certificatePersistenceStrategy)
+		{
+			AddFluffySpoonLetsEncryptDnsChallengePersistence(services,
+				(p) => certificatePersistenceStrategy);
+		}
+
+		public static void AddFluffySpoonLetsEncryptDnsChallengePersistence(
+		  this IServiceCollection services,
+		  Func<IServiceProvider, IDnsChallengePersistenceStrategy> dnsChallengePersistenceStrategyFactory)
+		{
+			services.AddFluffySpoonLetsEncryptPersistenceService();
+			services.AddSingleton(dnsChallengePersistenceStrategyFactory);
+		}
 	}
 }
