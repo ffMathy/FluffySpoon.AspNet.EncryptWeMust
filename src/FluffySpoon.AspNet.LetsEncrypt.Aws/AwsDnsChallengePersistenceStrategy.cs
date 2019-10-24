@@ -70,9 +70,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 		public async Task PersistAsync(string recordName, string recordType, string recordValue)
 		{
+			_logger.LogDebug($"Starting creation or update of {recordType} {recordName} with value {recordValue}");
+
 			var zone = await FindHostedZone(recordName);
 			if (zone == null)
+			{
+				_logger.LogDebug($"No zone was found");
 				return;
+			}
 
 			var recordSet = new ResourceRecordSet
 			{
@@ -98,6 +103,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				HostedZoneId = zone.Id,
 				ChangeBatch = changeBatch
 			};
+
+			_logger.LogInformation($"Creating or updating DNS record {recordType} {recordName}");
 
 			var upsertResponse = await _route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest() { ChangeBatch = changeBatch, HostedZoneId = zone.Id });
 
