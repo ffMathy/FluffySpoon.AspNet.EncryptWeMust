@@ -9,6 +9,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 	using System.IO;
 	using System.Linq;
 	using System.Security.Cryptography.X509Certificates;
+	using System.Text.RegularExpressions;
 	using System.Threading.Tasks;
 	using FluffySpoon.AspNet.LetsEncrypt;
 	using Microsoft.Azure.Management.AppService.Fluent;
@@ -53,6 +54,16 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return Azure.Authenticate(azureOptions.Credentials).WithDefaultSubscription();
 		}
 
+		private bool DomainMatches(string certificateDomain, string boundDomain) {
+			if (certificateDomain.StartsWith("*."))
+			{
+				var regexPattern = Regex.Replace(certificateDomain, "^\\*\\.", "^[^.]\\.");
+				return Regex.IsMatch(boundDomain, regexPattern);
+			}
+
+			return certificateDomain.ToLower() == boundDomain.ToLower();
+		}
+
 		public async Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
 		{
 			if (bytes.Length == 0)
@@ -82,7 +93,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 				if (azureOptions.Slot == null)
 				{
-					if (!app.HostNames.Any(domains.Contains))
+					if (!app.HostNames.Any(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain))))
 						continue;
 
 					relevantApps.Add((app, null));
@@ -93,7 +104,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 						.List()
 						.Where(x => x
 							.HostNames
-							.Any(domains.Contains));
+							.Any(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain))));
 					if (!slots.Any())
 						continue;
 
@@ -168,7 +179,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
-						.Where(domains.Contains)
+						.Where(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain)))
 						.ToArray();
 				}
 				else
@@ -177,7 +188,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.Slot
 						.HostNames
-						.Where(domains.Contains)
+						.Where(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain)))
 						.ToArray();
 				}
 
