@@ -93,7 +93,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 				foreach (var domain in dnsChallenge.Domains)
 				{
 					var dnsName = GetChallengeDnsName(domain);
-					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, TxtRecordType));
+					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, TxtRecordType, dnsChallenge.Token));
 					await Task.WhenAll(tasks);
 				}
 			}

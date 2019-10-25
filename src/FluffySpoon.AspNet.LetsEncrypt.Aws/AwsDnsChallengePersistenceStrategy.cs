@@ -16,7 +16,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 	{
 		private const char DomainSegmentSeparator = '.';
 		private const string WildcardPrefix = "*.";
-		private const int StatusPollIntervalSeconds = 15;
+		private const int StatusPollIntervalSeconds = 5;
 
 		private readonly AwsOptions _awsOptions;
 		private readonly ILogger<IAwsDnsChallengePersistenceStrategy> _logger;
@@ -29,9 +29,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			_route53Client = new AmazonRoute53Client(awsOptions.Credentials, awsOptions.Region);
 		}
 
-		public async Task DeleteAsync(string recordName, string recordType)
+		public async Task DeleteAsync(string recordName, string recordType, string recordValue)
 		{
-			_logger.LogDebug("Starting deletion of {RecordType} {RecordName}", recordType, recordName);
+			_logger.LogDebug("Starting deletion of {RecordType} {RecordName} with value {RecordValue}", recordType, recordName, recordValue);
 
 			var zone = await FindHostedZoneAsync(recordName);
 			if (zone == null)
@@ -40,7 +40,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				return;
 			}
 
-			var recordSets = await FindRecordSetsAsync(zone, recordName, recordType);
+			if (recordType == "TXT" && !recordValue.StartsWith("\"") && !recordValue.EndsWith("\""))
+				recordValue = $"\"{recordValue}\"";
+
+			var recordSets = await FindRecordSets(zone, recordName, recordType);
 			var changeBatch = new ChangeBatch();
 
 			if (!recordSets.Any())
@@ -51,14 +54,21 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			foreach (var recordSet in recordSets)
 			{
-				changeBatch.Changes.Add(
-					new Change() {
-						Action = ChangeAction.DELETE,
-						ResourceRecordSet = recordSet
-					});
+				if (!recordSet.ResourceRecords.Any(x => x.Value != recordValue))
+				{
+					_logger.LogDebug($"Will delete record {recordType} {recordName}");
+					changeBatch.Changes.Add(new Change() { Action = ChangeAction.DELETE, ResourceRecordSet = recordSet });
+				}
+				else
+				{
+					recordSet.ResourceRecords.RemoveAll(x => x.Value == recordValue);
+
+					_logger.LogDebug($"Will retain remaining answers for {recordType} {recordName}");
+					changeBatch.Changes.Add(new Change() { Action = ChangeAction.UPSERT, ResourceRecordSet = recordSet });
+				}
 			}
 
-			_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
+			_logger.LogInformation($"Deleting or modifying {changeBatch.Changes.Count} DNS records matching {recordType} {recordName} with value {recordValue} in zone {zone.Name}");
 
 			var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(
 				new ChangeResourceRecordSetsRequest() {
@@ -73,7 +83,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
 			{
-				_logger.LogDebug("Deletion of {RecordType} {RecordName} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, StatusPollIntervalSeconds);
+				_logger.LogDebug("Deletion or modification of {RecordType} {RecordName} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, StatusPollIntervalSeconds);
 				Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
 			}
 		}
@@ -89,17 +99,27 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				return;
 			}
 
-			var recordSet = new ResourceRecordSet
+			if (recordType == "TXT" && !recordValue.StartsWith("\"") && !recordValue.EndsWith("\""))
+				recordValue = $"\"{recordValue}\"";
+
+			var existingRecordSets = await FindRecordSets(zone, recordName, recordType);
+			var existingRecordSet = existingRecordSets.FirstOrDefault();
+
+			var recordSet = existingRecordSet ?? new ResourceRecordSet
 			{
 				Name = recordName,
 				TTL = 60,
 				Type = RRType.FindValue(recordType),
-				ResourceRecords = new List<ResourceRecord> {
-					new ResourceRecord {
-						Value = recordValue
-					}
-				}
+				ResourceRecords = new List<ResourceRecord>()
 			};
+
+			if (recordSet.ResourceRecords.Any(x => x.Value == recordValue))
+			{
+				_logger.LogDebug($"Record {recordType} {recordName} with value {recordValue} already exists");
+				return;
+			}
+
+			recordSet.ResourceRecords.Add(new ResourceRecord { Value = recordValue });
 
 			var change1 = new Change
 			{
@@ -144,6 +164,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			return changeReponse.ChangeInfo.Status == ChangeStatus.PENDING;
 		}
 
+		private string NormalizeDnsName(string dnsName)
+		{
+			return dnsName.EndsWith(".") ? dnsName.ToLower() : dnsName.ToLower() + ".";
+		}
+
 		private async Task<HostedZone> FindHostedZoneAsync(string dnsName)
 		{
 			_logger.LogDebug("Finding hosted zone responsible for {DnsName}", dnsName);
@@ -155,6 +180,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			HostedZone bestMatch = null;
 			int bestMatchScore = 0;
 
+			var normalizedDnsName = NormalizeDnsName(dnsName);
+
+			// Enumerate all hosted zones until a match is found, or until all hosted zones have been enumerated
 			var hostedZones = await _route53Client.ListHostedZonesAsync();
 
 			do
@@ -163,7 +191,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				{
 					_logger.LogDebug("Checking zone {Zone}", hostedZone.Name);
 
-					if (dnsName.EndsWith(DomainSegmentSeparator + hostedZone.Name, StringComparison.InvariantCultureIgnoreCase))
+					if (normalizedDnsName.EndsWith(hostedZone.Name, StringComparison.InvariantCultureIgnoreCase))
 					{
 						var hostedZoneParts = hostedZone.Name.Split(DomainSegmentSeparator);
 						var score = hostedZoneParts.Length;

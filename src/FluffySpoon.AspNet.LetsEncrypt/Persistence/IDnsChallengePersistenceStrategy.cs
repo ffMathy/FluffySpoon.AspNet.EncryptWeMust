@@ -15,6 +15,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		/// <summary>
 		/// Optional. The async method to use for deleting a DNS challenge after validation has completed.
 		/// </summary>
-		Task DeleteAsync(string recordName, string recordType);
+		Task DeleteAsync(string recordName, string recordType, string recordValue);
 	}
 }
