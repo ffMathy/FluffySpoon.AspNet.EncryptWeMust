@@ -60,7 +60,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		private bool DomainMatches(string certificateDomain, string boundDomain) {
 			if (certificateDomain.StartsWith(WildcardPrefix))
 			{
-				var regexPattern = Regex.Replace(certificateDomain, "^\\*\\.", "^[^.]\\.");
+				var regexPattern = Regex.Replace(certificateDomain, "^\\*\\.", "^[^.]*\\.");
 				return Regex.IsMatch(boundDomain, regexPattern);
 			}
 
@@ -83,7 +83,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			var domains = letsEncryptOptions.Domains.ToArray();
 
-			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, domains);
+			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, String.Join(", ", domains));
 
 			var apps = await client.WebApps.ListByResourceGroupAsync(azureOptions.ResourceGroupName);
 
@@ -92,7 +92,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			var relevantApps = new HashSet<(IWebApp App, IDeploymentSlot Slot)>();
 			foreach (var app in apps)
 			{
-				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, domains);
+				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, String.Join(", ", domains));
 
 				if (azureOptions.Slot == null)
 				{
