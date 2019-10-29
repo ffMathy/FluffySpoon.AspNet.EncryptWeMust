@@ -252,7 +252,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				var certThumbprintsToLoad = loadCertificatesSetting.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
 				if (!certThumbprintsToLoad.Contains(azureCertificate.Thumbprint))
 				{
-					logger.LogInformation($"Adding certificate thumbprint {azureCertificate.Thumbprint} to WEBSITE_LOAD_CERTIFICATES app setting");
+					logger.LogInformation("Adding certificate thumbprint {0} to WEBSITE_LOAD_CERTIFICATES app setting", azureCertificate.Thumbprint);
 
 					certThumbprintsToLoad.Add(azureCertificate.Thumbprint);
 
@@ -269,7 +269,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					}
 					catch (Exception ex)
 					{
-						logger.LogError(ex, $"Error updating app settings for {appTuple.App.Name}");
+						logger.LogError(ex, "Error updating app settings for {0}", appTuple.App.Name);
 					}
 				}
 			}
@@ -281,7 +281,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			if (certificate == null)
 			{
-				logger.LogInformation($"Certificate of type {persistenceType} not found.");
+				logger.LogInformation("Certificate of type {0} not found.", persistenceType);
 				return null;
 			}
 
@@ -289,7 +289,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			if (pfxBlob == null || pfxBlob.Length == 0)
 			{
-				logger.LogError($"Certificate was found (thumbprint {certificate.Thumbprint}), but PfxBlob was null or 0 length.");
+				logger.LogError("Certificate was found (thumbprint {0}), but PfxBlob was null or 0 length.", certificate.Thumbprint);
 				return null;
 			}
 
