@@ -8,7 +8,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 	public interface IDnsChallengePersistenceStrategy
 	{
 		/// <summary>
-		/// Optional. The async method to use for persisting a DNS challenge.
+		/// The async method to use for persisting a DNS challenge.
 		/// </summary>
 		Task PersistAsync(string recordName, string recordType, string recordValue);
 

@@ -184,6 +184,29 @@ services.AddFluffySpoonLetsEncryptAzureAppServiceSslBindingCertificatePersistenc
 
 The resource group for the App Service can also easily be accessed through an environment variable, as specified above.
 
+# DNS challenges & wildcard certificates
+
+By default, challenges are validated over HTTP. This requires that the domain being validated resolves to an operational web server which can respond with the correct token. There are some rare circumstances where this may not be possible. Additionally, this method does not support wildcard certificates.
+
+The use of DNS validation can overcome these issues. The `FluffySpoon.AspNet.LetsEncrypt.Aws` package includes an implementation of DNS challenge support using AWS Route 53.
+
+To implement support for other DNS providers, implement `IDnsChallengePersistenceStrategy` and register it using the `AddFluffySpoonLetsEncryptDnsChallengePersistence` services configuration extension.
+
+The example below shows how to add DNS challenge support using the Route 53 implementation:
+
+```csharp
+services.AddFluffySpoonLetsEncryptAwsRoute53DnsChallengePersistence(
+	new AwsOptions()
+	{
+		Region = ..., // Specify the AWS Region
+		Credentials = new BasicAWSCredentials(...) // Specify some IAM credentials with access to read and write to Route 53
+	});
+```
+
+DNS validation can be used in conjunction with HTTP validation - Lets Encrypt will decide which is best. It can be used in conjunction with other persistence strategies, including Azure.
+
+Wildcard certificates can be requested by supplying a wildcard domain in the list of domains to include in the certificate order e.g. `*.mydomain.com`.
+
 
 # Hooking into events
 You can register a an `ICertificateRenewalLifecycleHook` implementation which does something when certain events occur, as shown below. This can be useful if you need to notify a Slack channel or send an e-mail if an error occurs, or when the certificate has indeed been renewed.
