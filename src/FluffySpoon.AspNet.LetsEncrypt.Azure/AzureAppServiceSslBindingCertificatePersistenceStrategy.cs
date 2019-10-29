@@ -69,7 +69,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			var domains = letsEncryptOptions.Domains.ToArray();
 
-			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, domains);
+			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, String.Join(", ", domains));
 
 			var apps = await client.WebApps.ListByResourceGroupAsync(azureOptions.ResourceGroupName);
 
@@ -78,7 +78,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			var relevantApps = new HashSet<(IWebApp App, IDeploymentSlot Slot)>();
 			foreach (var app in apps)
 			{
-				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, domains);
+				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, String.Join(", ", domains));
 
 				if (azureOptions.Slot == null)
 				{
@@ -105,9 +105,9 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			}
 
 			if (regionName == null)
-				throw new InvalidOperationException("Could not find an app that has a hostname created for domains " + domains + ".");
+				throw new InvalidOperationException("Could not find an app that has a hostname created for domains " + String.Join(", ", domains) + ".");
 
-			var azureCertificate = await GetExistingCertificateAsync(persistenceType);
+			var azureCertificate = await GetExistingAzureCertificateAsync(persistenceType);
 			if (azureCertificate != null)
 			{
 				logger.LogInformation("Updating existing Azure certificate for key {0}.", persistenceType);
@@ -123,7 +123,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							HostNames = domains,
 							PfxBlob = bytes
 						});
-				azureCertificate = await GetExistingCertificateAsync(persistenceType);
+				azureCertificate = await GetExistingAzureCertificateAsync(persistenceType);
 			}
 			else
 			{
@@ -164,7 +164,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				string[] domainsToUpgrade;
 				if (azureOptions.Slot == null)
 				{
-					logger.LogInformation("Updating host name bindings for app {0}", appTuple.App.Name);
+					logger.LogInformation("Checking host name bindings for app {0}", appTuple.App.Name);
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
@@ -173,7 +173,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				}
 				else
 				{
-					logger.LogInformation("Updating host name bindings for app {0}/{1}", appTuple.App.Name, appTuple.Slot.Name);
+					logger.LogInformation("Checking host name bindings for app {0}/{1}", appTuple.App.Name, appTuple.Slot.Name);
 					domainsToUpgrade = appTuple
 						.Slot
 						.HostNames
@@ -183,24 +183,50 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 				foreach (var domain in domainsToUpgrade)
 				{
-					logger.LogDebug("Updating host name bindings for domain {0}", domain);
+					logger.LogDebug("Checking host name binding for domain {0}", domain);
 
 					if (azureOptions.Slot == null)
 					{
-						await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
-							azureOptions.ResourceGroupName,
+						var existingBinding = await client.WebApps.Inner.GetHostNameBindingAsync(azureOptions.ResourceGroupName,
 							appTuple.App.Name,
-							domain,
-							new HostNameBindingInner(
-								azureResourceType: AzureResourceType.Website,
-								hostNameType: HostNameType.Verified,
-								customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
-								sslState: SslState.SniEnabled,
-								thumbprint: azureCertificate.Thumbprint));
+							domain);
+
+						if (
+							existingBinding == null ||
+							existingBinding.SslState != SslState.SniEnabled ||
+							existingBinding.Thumbprint != azureCertificate.Thumbprint
+						)
+						{
+							logger.LogDebug("Updating host name binding for domain {0}", domain);
+
+							await client.WebApps.Inner.CreateOrUpdateHostNameBindingWithHttpMessagesAsync(
+								azureOptions.ResourceGroupName,
+								appTuple.App.Name,
+								domain,
+								new HostNameBindingInner(
+									azureResourceType: AzureResourceType.Website,
+									hostNameType: HostNameType.Verified,
+									customHostNameDnsRecordType: CustomHostNameDnsRecordType.CName,
+									sslState: SslState.SniEnabled,
+									thumbprint: azureCertificate.Thumbprint));
+						}
 					}
 					else
 					{
-						await client.WebApps.Inner.CreateOrUpdateHostNameBindingSlotWithHttpMessagesAsync(
+						var existingBinding = await client.WebApps.Inner.GetHostNameBindingSlotAsync(azureOptions.ResourceGroupName,
+							appTuple.App.Name,
+							appTuple.Slot.Name,
+							domain);
+
+						if (
+							existingBinding == null ||
+							existingBinding.SslState != SslState.SniEnabled ||
+							existingBinding.Thumbprint != azureCertificate.Thumbprint
+						)
+						{
+							logger.LogDebug("Updating host name binding for domain {0}", domain);
+
+							await client.WebApps.Inner.CreateOrUpdateHostNameBindingSlotWithHttpMessagesAsync(
 							azureOptions.ResourceGroupName,
 							appTuple.App.Name,
 							domain,
@@ -211,6 +237,39 @@ namespace FluffySpoon.LetsEncrypt.Azure
 								sslState: SslState.SniEnabled,
 								thumbprint: azureCertificate.Thumbprint),
 							appTuple.Slot.Name);
+						}
+					}
+				}
+
+				logger.LogDebug($"Getting app settings");
+
+				var appSettings = await client.WebApps.Manager
+					.WebApps
+					.GetByResourceGroup(appTuple.App.ResourceGroupName, appTuple.App.Name)
+					.GetAppSettingsAsync();
+
+				var loadCertificatesSetting = appSettings.ContainsKey("WEBSITE_LOAD_CERTIFICATES") ? appSettings["WEBSITE_LOAD_CERTIFICATES"].Value : String.Empty;
+				var certThumbprintsToLoad = loadCertificatesSetting.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+				if (!certThumbprintsToLoad.Contains(azureCertificate.Thumbprint))
+				{
+					logger.LogInformation($"Adding certificate thumbprint {azureCertificate.Thumbprint} to WEBSITE_LOAD_CERTIFICATES app setting");
+
+					certThumbprintsToLoad.Add(azureCertificate.Thumbprint);
+
+					loadCertificatesSetting = String.Join(",", certThumbprintsToLoad);
+
+					try
+					{
+						await client.WebApps.Manager
+							.WebApps
+							.GetByResourceGroup(appTuple.App.ResourceGroupName, appTuple.App.Name)
+							.Update()
+							.WithAppSetting("WEBSITE_LOAD_CERTIFICATES", loadCertificatesSetting)
+							.ApplyAsync();
+					}
+					catch (Exception ex)
+					{
+						logger.LogError(ex, $"Error updating app settings for {appTuple.App.Name}");
 					}
 				}
 			}
@@ -219,10 +278,25 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		public async Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
 		{
 			var certificate = await GetExistingCertificateAsync(persistenceType);
-			return certificate?.PfxBlob;
+
+			if (certificate == null)
+			{
+				logger.LogInformation($"Certificate of type {persistenceType} not found.");
+				return null;
+			}
+
+			var pfxBlob = certificate?.GetRawCertData();
+
+			if (pfxBlob == null || pfxBlob.Length == 0)
+			{
+				logger.LogError($"Certificate was found (thumbprint {certificate.Thumbprint}), but PfxBlob was null or 0 length.");
+				return null;
+			}
+
+			return pfxBlob;
 		}
 
-		private async Task<IAppServiceCertificate> GetExistingCertificateAsync(PersistenceType persistenceType)
+		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(PersistenceType persistenceType)
 		{
 			if (persistenceType != PersistenceType.Site)
 			{
@@ -243,6 +317,38 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					continue;
 
 				return certificate;
+			}
+
+			logger.LogInformation("Could not find existing Azure certificate.");
+
+			return null;
+		}
+
+		private async Task<X509Certificate2> GetExistingCertificateAsync(PersistenceType persistenceType)
+		{
+			var azureCert = await GetExistingAzureCertificateAsync(persistenceType);
+
+			X509Store certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+			certStore.Open(OpenFlags.ReadOnly);
+
+			try
+			{
+				X509Certificate2Collection certCollection = certStore.Certificates.Find(
+											X509FindType.FindByThumbprint,
+											// Replace below with your certificate's thumbprint
+											azureCert.Thumbprint,
+											false);
+
+				// Get the first cert with the thumbprint
+				if (certCollection.Count > 0)
+				{
+					X509Certificate2 cert = certCollection[0];
+					return cert;
+				}
+			}
+			finally
+			{
+				certStore.Close();
 			}
 
 			logger.LogInformation("Could not find existing Azure certificate.");
