@@ -192,6 +192,28 @@ The use of DNS validation can overcome these issues. The `FluffySpoon.AspNet.Let
 
 To implement support for other DNS providers, implement `IDnsChallengePersistenceStrategy` and register it using the `AddFluffySpoonLetsEncryptDnsChallengePersistence` services configuration extension.
 
+To enable DNS challenge support, when configuring the renewal service you must specify `ChallengeTypes = ChallengeType.Dns01 | ChallengeType.Http01` for example:
+```
+//the following line adds the automatic renewal service.
+services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+{
+	Email = "some-email@github.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
+	UseStaging = false, //switch to true for testing
+	Domains = new[] { DomainToUse },
+	TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30), //renew automatically 30 days before expiry
+	TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7), //renew automatically 7 days after the last certificate was issued
+	CertificateSigningRequest = new CsrInfo() //these are your certificate details
+	{
+		CountryName = "Denmark",
+		Locality = "DK",
+		Organization = "Fluffy Spoon",
+		OrganizationUnit = "Hat department",
+		State = "DK"
+	},
+	ChallengeTypes = ChallengeType.Dns01 | ChallengeType.Http01 //enable both HTTP and DNS challenges
+});
+```
+
 The example below shows how to add DNS challenge support using the Route 53 implementation:
 
 ```csharp
@@ -203,7 +225,7 @@ services.AddFluffySpoonLetsEncryptAwsRoute53DnsChallengePersistence(
 	});
 ```
 
-DNS validation can be used in conjunction with HTTP validation - Lets Encrypt will decide which is best. It can be used in conjunction with other persistence strategies, including Azure.
+DNS validation can (and in cases where you're requesting any non-wildcard domains, must) be used in conjunction with HTTP validation - Lets Encrypt will decide which is best. It can be used in conjunction with other persistence strategies, including Azure.
 
 Wildcard certificates can be requested by supplying a wildcard domain in the list of domains to include in the certificate order e.g. `*.mydomain.com`.
 
