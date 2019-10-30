@@ -193,11 +193,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							appTuple.App.Name,
 							domain);
 
-						if (
-							existingBinding == null ||
-							existingBinding.SslState != SslState.SniEnabled ||
-							existingBinding.Thumbprint != azureCertificate.Thumbprint
-						)
+						if (DoesBindingNeedUpdating(existingBinding, azureCertificate.Thumbprint))
 						{
 							logger.LogDebug("Updating host name binding for domain {0}", domain);
 
@@ -220,11 +216,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							appTuple.Slot.Name,
 							domain);
 
-						if (
-							existingBinding == null ||
-							existingBinding.SslState != SslState.SniEnabled ||
-							existingBinding.Thumbprint != azureCertificate.Thumbprint
-						)
+						if (DoesBindingNeedUpdating(existingBinding, azureCertificate.Thumbprint))
 						{
 							logger.LogDebug("Updating host name binding for domain {0}", domain);
 
@@ -275,6 +267,11 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					}
 				}
 			}
+		}
+
+		private bool DoesBindingNeedUpdating(HostNameBindingInner existingBinding, string certificateThumbprint)
+		{
+			return existingBinding == null || existingBinding.SslState != SslState.SniEnabled || existingBinding.Thumbprint != certificateThumbprint;
 		}
 
 		public async Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
