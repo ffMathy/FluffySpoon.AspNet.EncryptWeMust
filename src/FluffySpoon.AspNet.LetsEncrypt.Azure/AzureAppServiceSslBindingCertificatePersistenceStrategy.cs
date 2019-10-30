@@ -17,6 +17,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
+		private const string AzureCertThumbprintsAppSettingName = "WEBSITE_LOAD_CERTIFICATES";
+
 		private readonly AzureOptions azureOptions;
 		private readonly LetsEncryptOptions letsEncryptOptions;
 
@@ -248,11 +250,11 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					.GetByResourceGroup(appTuple.App.ResourceGroupName, appTuple.App.Name)
 					.GetAppSettingsAsync();
 
-				var loadCertificatesSetting = appSettings.ContainsKey("WEBSITE_LOAD_CERTIFICATES") ? appSettings["WEBSITE_LOAD_CERTIFICATES"].Value : String.Empty;
+				var loadCertificatesSetting = appSettings.ContainsKey(AzureCertThumbprintsAppSettingName) ? appSettings[AzureCertThumbprintsAppSettingName].Value : String.Empty;
 				var certThumbprintsToLoad = loadCertificatesSetting.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
 				if (!certThumbprintsToLoad.Contains(azureCertificate.Thumbprint))
 				{
-					logger.LogInformation("Adding certificate thumbprint {0} to WEBSITE_LOAD_CERTIFICATES app setting", azureCertificate.Thumbprint);
+					logger.LogInformation("Adding certificate thumbprint {0} to {1} app setting", azureCertificate.Thumbprint, AzureCertThumbprintsAppSettingName);
 
 					certThumbprintsToLoad.Add(azureCertificate.Thumbprint);
 
@@ -264,7 +266,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 							.WebApps
 							.GetByResourceGroup(appTuple.App.ResourceGroupName, appTuple.App.Name)
 							.Update()
-							.WithAppSetting("WEBSITE_LOAD_CERTIFICATES", loadCertificatesSetting)
+							.WithAppSetting(AzureCertThumbprintsAppSettingName, loadCertificatesSetting)
 							.ApplyAsync();
 					}
 					catch (Exception ex)
