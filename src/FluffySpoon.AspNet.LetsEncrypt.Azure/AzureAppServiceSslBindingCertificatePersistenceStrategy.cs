@@ -18,6 +18,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
+		private const string WildcardPrefix = "*.";
+
 		private readonly AzureOptions azureOptions;
 		private readonly LetsEncryptOptions letsEncryptOptions;
 
@@ -55,7 +57,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		}
 
 		private bool DomainMatches(string certificateDomain, string boundDomain) {
-			if (certificateDomain.StartsWith("*."))
+			if (certificateDomain.StartsWith(WildcardPrefix))
 			{
 				var regexPattern = Regex.Replace(certificateDomain, "^\\*\\.", "^[^.]\\.");
 				return Regex.IsMatch(boundDomain, regexPattern);

@@ -133,10 +133,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public static void AddFluffySpoonLetsEncryptDnsChallengePersistence(
 		  this IServiceCollection services,
-		  IDnsChallengePersistenceStrategy certificatePersistenceStrategy)
+		  IDnsChallengePersistenceStrategy dnsChallengePersistenceStrategy)
 		{
 			AddFluffySpoonLetsEncryptDnsChallengePersistence(services,
-				(p) => certificatePersistenceStrategy);
+				(p) => dnsChallengePersistenceStrategy);
 		}
 
 		public static void AddFluffySpoonLetsEncryptDnsChallengePersistence(

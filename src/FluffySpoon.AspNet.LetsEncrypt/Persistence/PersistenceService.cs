@@ -20,6 +20,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 	class PersistenceService : IPersistenceService
 	{
+		private const string DnsChallengeNameFormat = "_acme-challenge.{0}";
+		private const string WildcardRegex = "^\\*\\.";
+		private const string TxtRecordType = "TXT";
+
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<IChallengePersistenceStrategy> _challengePersistenceStrategies;
 		private readonly IEnumerable<IDnsChallengePersistenceStrategy> _dnsChallengePersistenceStrategies;
@@ -63,13 +67,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
 			foreach (var dnsChallenge in dnsChallenges)
 			{
-				_logger.LogTrace($"Persisting DNS challenge through {_dnsChallengePersistenceStrategies.Count()} possible strategies");
+				_logger.LogTrace("Persisting DNS challenge through {0} possible strategies", _dnsChallengePersistenceStrategies.Count());
 
 				foreach (var domain in dnsChallenge.Domains) {
-					var dnsName = Regex.Replace(domain, "^\\*\\.", String.Empty);
-					dnsName = $"_acme-challenge.{dnsName}";
+					var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
+					dnsName = String.Format(DnsChallengeNameFormat, dnsName);
 
-					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.PersistAsync(dnsName, "TXT", dnsChallenge.Token));
+					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.PersistAsync(dnsName, TxtRecordType, dnsChallenge.Token));
 					await Task.WhenAll(tasks);
 				}
 			}
@@ -80,14 +84,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
 			foreach (var dnsChallenge in dnsChallenges)
 			{
-				_logger.LogTrace($"Deleting DNS challenge through {_dnsChallengePersistenceStrategies.Count()} possible strategies");
+				_logger.LogTrace("Deleting DNS challenge through {0} possible strategies", _dnsChallengePersistenceStrategies.Count());
 
 				foreach (var domain in dnsChallenge.Domains)
 				{
-					var dnsName = Regex.Replace(domain, "^\\*\\.", String.Empty);
-					dnsName = $"_acme-challenge.{dnsName}";
+					var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
+					dnsName = String.Format(DnsChallengeNameFormat, dnsName);
 
-					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, "TXT"));
+					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, TxtRecordType));
 					await Task.WhenAll(tasks);
 				}
 			}

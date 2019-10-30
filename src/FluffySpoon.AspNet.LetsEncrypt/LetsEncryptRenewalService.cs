@@ -156,7 +156,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			// Check for wildcard
 			if (!_options.ChallengeTypes.HasFlag(ChallengeType.Dns01) && domains.Any(x => x.StartsWith("*.")))
 				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but DNS challenge/validation is not enabled.");
 

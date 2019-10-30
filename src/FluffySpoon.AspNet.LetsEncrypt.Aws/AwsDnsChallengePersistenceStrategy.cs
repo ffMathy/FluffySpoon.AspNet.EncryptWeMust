@@ -14,7 +14,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 {
 	public class AwsDnsChallengePersistenceStrategy : IDnsChallengePersistenceStrategy, IAwsDnsChallengePersistenceStrategy
 	{
-		private const int STATUS_POLL_INTERVAL_SECONDS = 15;
+		private const char DomainSegmentSeparator = '.';
+		private const string WildcardPrefix = "*.";
+		private const int StatusPollIntervalSeconds = 15;
 
 		private readonly AwsOptions _awsOptions;
 		private readonly ILogger<IAwsDnsChallengePersistenceStrategy> _logger;
@@ -29,17 +31,18 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 		public async Task DeleteAsync(string recordName, string recordType)
 		{
-			_logger.LogDebug($"Starting deletion of {recordType} {recordName}");
+			_logger.LogDebug("Starting deletion of {RecordType} {RecordName}", recordType, recordName);
 
 			var zone = await FindHostedZone(recordName);
 			if (zone == null)
 			{
-				_logger.LogDebug($"No zone was found");
+				_logger.LogDebug("No zone was found");
 				return;
 			}
 
 			var recordSets = await FindRecordSets(zone, recordName, recordType);
 			var changeBatch = new ChangeBatch();
+
 			foreach (var recordSet in recordSets)
 			{
 				changeBatch.Changes.Add(new Change() { Action = ChangeAction.DELETE, ResourceRecordSet = recordSet });
@@ -47,7 +50,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			if (changeBatch.Changes.Count > 0)
 			{
-				_logger.LogInformation($"Deleting {changeBatch.Changes.Count} DNS records matching {recordType} {recordName} in zone {zone.Name}");
+				_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
 
 				var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest() { ChangeBatch = changeBatch, HostedZoneId = zone.Id });
 
@@ -58,19 +61,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 				while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
 				{
-					_logger.LogDebug($"Deletion of {recordType} {recordName} is pending. Checking for status update in {STATUS_POLL_INTERVAL_SECONDS} seconds.");
-					Thread.Sleep(TimeSpan.FromSeconds(STATUS_POLL_INTERVAL_SECONDS));
+					_logger.LogDebug("Deletion of {RecordType} {RecordName} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, StatusPollIntervalSeconds);
+					Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
 				}
 			}
 			else
 			{
-				_logger.LogInformation($"No DNS records matching {recordType} {recordName} were found to delete in zone {zone.Name}");
+				_logger.LogInformation("No DNS records matching {RecordType} {RecordName} were found to delete in zone {Zone}", recordType, recordName, zone.Name);
 			}
 		}
 
 		public async Task PersistAsync(string recordName, string recordType, string recordValue)
 		{
-			_logger.LogDebug($"Starting creation or update of {recordType} {recordName} with value {recordValue}");
+			_logger.LogDebug("Starting creation or update of {RecordType} {RecordName} with value {RecordValue}", recordType, recordName, recordValue);
 
 			var zone = await FindHostedZone(recordName);
 			if (zone == null)
@@ -115,17 +118,18 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
 			{
-				_logger.LogDebug($"Creation/update of {recordType} {recordName} with value {recordValue} is pending. Checking for status update in {STATUS_POLL_INTERVAL_SECONDS} seconds.");
-				Thread.Sleep(TimeSpan.FromSeconds(STATUS_POLL_INTERVAL_SECONDS));
+				_logger.LogDebug("Creation/update of {RecordType} {RecordName} with value {RecordValue} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, recordValue, StatusPollIntervalSeconds);
+				Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
 			}
 		}
 
 		private async Task<HostedZone> FindHostedZone(string dnsName)
 		{
-			_logger.LogDebug($"Finding hosted zone responsible for {dnsName}");
+			_logger.LogDebug("Finding hosted zone responsible for {DnsName}", dnsName);
 
-			var partsToMatch = dnsName.Split('.');
-			var bestPossibleScore = dnsName.StartsWith("*.") ? partsToMatch.Length - 1 : partsToMatch.Length;
+			var partsToMatch = dnsName.Split(DomainSegmentSeparator);
+			var isWildcard = dnsName.StartsWith(WildcardPrefix);
+			var bestPossibleScore = isWildcard ? partsToMatch.Length - 1 : partsToMatch.Length;
 
 			HostedZone bestMatch = null;
 			int bestMatchScore = 0;
@@ -136,24 +140,24 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			{
 				foreach (var hostedZone in hostedZones.HostedZones)
 				{
-					_logger.LogDebug($"Checking zone {hostedZone.Name}");
+					_logger.LogDebug("Checking zone {Zone}", hostedZone.Name);
 
-					if (dnsName.ToLower().EndsWith("." + hostedZone.Name.ToLower()))
+					if (dnsName.ToLower().EndsWith(DomainSegmentSeparator + hostedZone.Name.ToLower()))
 					{
 						// Matches, calculate score
-						var hostedZoneParts = hostedZone.Name.Split('.');
+						var hostedZoneParts = hostedZone.Name.Split(DomainSegmentSeparator);
 						var score = hostedZoneParts.Length;
 
 						if (score == bestPossibleScore)
 						{
-							_logger.LogInformation($"Exact match for {dnsName} found (zone {hostedZone.Name})");
+							_logger.LogInformation("Exact match for {DnsName} found (zone {Zone})", dnsName, hostedZone.Name);
 
 							// Exact match found
 							return hostedZone;
 						}
 						else if (score > bestMatchScore)
 						{
-							_logger.LogDebug($"Setting best match for {dnsName} to zone {hostedZone.Name}");
+							_logger.LogDebug("Setting best match for {DnsName} to zone {Zone}", dnsName, hostedZone.Name);
 
 							bestMatch = hostedZone;
 							bestMatchScore = score;
@@ -165,21 +169,21 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			}
 
 			if (bestMatch == null)
-				_logger.LogInformation($"No zone match for {dnsName} found");
+				_logger.LogInformation("No zone match for {DnsName} found", dnsName);
 			else
-				_logger.LogInformation($"Best match for {dnsName} found (zone {bestMatch.Name})");
+				_logger.LogInformation("Best match for {DnsName} found (zone {Zone})", dnsName, bestMatch.Name);
 
 			return bestMatch;
 		}
 
-		private async Task<IEnumerable<ResourceRecordSet>> FindRecordSets(HostedZone zone, string dnsName, string type)
+		private async Task<IEnumerable<ResourceRecordSet>> FindRecordSets(HostedZone zone, string dnsName, string recordType)
 		{
-			_logger.LogDebug($"Finding record sets for {type} {dnsName} in zone {zone.Name}");
+			_logger.LogDebug("Finding record sets for {RecordType} {DnsName} in zone {Zone}", recordType, dnsName, zone.Name);
 
 			var result = new List<ResourceRecordSet>();
-			var rootedDnsName = dnsName.EndsWith(".") ? dnsName : dnsName + '.';
+			var rootedDnsName = dnsName.EndsWith(DomainSegmentSeparator.ToString()) ? dnsName : dnsName + DomainSegmentSeparator;
 			var remainder = dnsName.Replace(zone.Name, String.Empty);
-			var recordSets = await _route53Client.ListResourceRecordSetsAsync(new ListResourceRecordSetsRequest() { HostedZoneId = zone.Id, StartRecordType = RRType.FindValue(type), StartRecordName = dnsName });
+			var recordSets = await _route53Client.ListResourceRecordSetsAsync(new ListResourceRecordSetsRequest() { HostedZoneId = zone.Id, StartRecordType = RRType.FindValue(recordType), StartRecordName = dnsName });
 
 			while (recordSets.IsTruncated)
 			{
@@ -192,7 +196,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				recordSets = await _route53Client.ListResourceRecordSetsAsync(new ListResourceRecordSetsRequest() { HostedZoneId = zone.Id, StartRecordType = recordSets.NextRecordType, StartRecordName = recordSets.NextRecordName, StartRecordIdentifier = recordSets.NextRecordIdentifier });
 			}
 
-			_logger.LogInformation($"{result.Count} record sets were found for {type} {dnsName} in zone {zone.Name}");
+			_logger.LogInformation("{Count} record sets were found for {RecordType} {DnsName} in zone {Zone}", result.Count, recordType, dnsName, zone.Name);
 
 			return result;
 		}
