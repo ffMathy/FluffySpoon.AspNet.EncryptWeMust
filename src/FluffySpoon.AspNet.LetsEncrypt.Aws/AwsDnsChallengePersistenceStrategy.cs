@@ -45,14 +45,22 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			foreach (var recordSet in recordSets)
 			{
-				changeBatch.Changes.Add(new Change() { Action = ChangeAction.DELETE, ResourceRecordSet = recordSet });
+				changeBatch.Changes.Add(
+					new Change() {
+						Action = ChangeAction.DELETE,
+						ResourceRecordSet = recordSet
+					});
 			}
 
 			if (changeBatch.Changes.Count > 0)
 			{
 				_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
 
-				var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest() { ChangeBatch = changeBatch, HostedZoneId = zone.Id });
+				var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(
+					new ChangeResourceRecordSetsRequest() {
+						ChangeBatch = changeBatch,
+						HostedZoneId = zone.Id
+					});
 
 				var changeRequest = new GetChangeRequest
 				{
@@ -87,7 +95,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				Name = recordName,
 				TTL = 60,
 				Type = RRType.FindValue(recordType),
-				ResourceRecords = new List<ResourceRecord> { new ResourceRecord { Value = recordValue } }
+				ResourceRecords = new List<ResourceRecord> {
+					new ResourceRecord {
+						Value = recordValue
+					}
+				}
 			};
 
 			var change1 = new Change
@@ -109,7 +121,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 			_logger.LogInformation($"Creating or updating DNS record {recordType} {recordName}");
 
-			var upsertResponse = await _route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest() { ChangeBatch = changeBatch, HostedZoneId = zone.Id });
+			var upsertResponse = await _route53Client.ChangeResourceRecordSetsAsync(
+				new ChangeResourceRecordSetsRequest() {
+					ChangeBatch = changeBatch,
+					HostedZoneId = zone.Id
+				});
 
 			var changeRequest = new GetChangeRequest
 			{
@@ -183,7 +199,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			var result = new List<ResourceRecordSet>();
 			var rootedDnsName = dnsName.EndsWith(DomainSegmentSeparator.ToString()) ? dnsName : dnsName + DomainSegmentSeparator;
 			var remainder = dnsName.Replace(zone.Name, String.Empty);
-			var recordSets = await _route53Client.ListResourceRecordSetsAsync(new ListResourceRecordSetsRequest() { HostedZoneId = zone.Id, StartRecordType = RRType.FindValue(recordType), StartRecordName = dnsName });
+
+			var recordSets = await _route53Client.ListResourceRecordSetsAsync(
+				new ListResourceRecordSetsRequest() {
+					HostedZoneId = zone.Id,
+					StartRecordType = RRType.FindValue(recordType),
+					StartRecordName = dnsName
+				});
 
 			while (recordSets.IsTruncated)
 			{
@@ -193,7 +215,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 						result.Add(recordSet);
 				}
 
-				recordSets = await _route53Client.ListResourceRecordSetsAsync(new ListResourceRecordSetsRequest() { HostedZoneId = zone.Id, StartRecordType = recordSets.NextRecordType, StartRecordName = recordSets.NextRecordName, StartRecordIdentifier = recordSets.NextRecordIdentifier });
+				recordSets = await _route53Client.ListResourceRecordSetsAsync(
+					new ListResourceRecordSetsRequest() {
+						HostedZoneId = zone.Id,
+						StartRecordType = recordSets.NextRecordType,
+						StartRecordName = recordSets.NextRecordName,
+						StartRecordIdentifier = recordSets.NextRecordIdentifier
+					});
 			}
 
 			_logger.LogInformation("{Count} record sets were found for {RecordType} {DnsName} in zone {Zone}", result.Count, recordType, dnsName, zone.Name);
