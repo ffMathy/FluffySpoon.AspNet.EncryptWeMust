@@ -52,30 +52,29 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 					});
 			}
 
-			if (changeBatch.Changes.Count > 0)
-			{
-				_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
-
-				var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(
-					new ChangeResourceRecordSetsRequest() {
-						ChangeBatch = changeBatch,
-						HostedZoneId = zone.Id
-					});
-
-				var changeRequest = new GetChangeRequest
-				{
-					Id = deleteResponse.ChangeInfo.Id
-				};
-
-				while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
-				{
-					_logger.LogDebug("Deletion of {RecordType} {RecordName} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, StatusPollIntervalSeconds);
-					Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
-				}
-			}
-			else
+			if (changeBatch.Changes.Count == 0)
 			{
 				_logger.LogInformation("No DNS records matching {RecordType} {RecordName} were found to delete in zone {Zone}", recordType, recordName, zone.Name);
+				return;
+			}
+
+			_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
+
+			var deleteResponse = await _route53Client.ChangeResourceRecordSetsAsync(
+				new ChangeResourceRecordSetsRequest() {
+					ChangeBatch = changeBatch,
+					HostedZoneId = zone.Id
+				});
+
+			var changeRequest = new GetChangeRequest
+			{
+				Id = deleteResponse.ChangeInfo.Id
+			};
+
+			while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
+			{
+				_logger.LogDebug("Deletion of {RecordType} {RecordName} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, StatusPollIntervalSeconds);
+				Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
 			}
 		}
 
