@@ -43,6 +43,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			var recordSets = await FindRecordSetsAsync(zone, recordName, recordType);
 			var changeBatch = new ChangeBatch();
 
+			if (!recordSets.Any())
+			{
+				_logger.LogInformation("No DNS records matching {RecordType} {RecordName} were found to delete in zone {Zone}", recordType, recordName, zone.Name);
+				return;
+			}
+
 			foreach (var recordSet in recordSets)
 			{
 				changeBatch.Changes.Add(
@@ -50,12 +56,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 						Action = ChangeAction.DELETE,
 						ResourceRecordSet = recordSet
 					});
-			}
-
-			if (changeBatch.Changes.Count == 0)
-			{
-				_logger.LogInformation("No DNS records matching {RecordType} {RecordName} were found to delete in zone {Zone}", recordType, recordName, zone.Name);
-				return;
 			}
 
 			_logger.LogInformation("Deleting {NumberOfChanges} DNS records matching {RecordType} {RecordName} in zone {Zone}", changeBatch.Changes.Count, recordType, recordName, zone.Name);
