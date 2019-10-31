@@ -132,11 +132,17 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				Id = upsertResponse.ChangeInfo.Id
 			};
 
-			while ((await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status == ChangeStatus.PENDING)
+			while (await IsChangePendingAsync(changeRequest))
 			{
 				_logger.LogDebug("Creation/update of {RecordType} {RecordName} with value {RecordValue} is pending. Checking for status update in {StatusPollIntervalSeconds} seconds.", recordType, recordName, recordValue, StatusPollIntervalSeconds);
 				Thread.Sleep(TimeSpan.FromSeconds(StatusPollIntervalSeconds));
 			}
+		}
+
+		private async Task<bool> IsChangePendingAsync(GetChangeRequest changeRequest)
+		{
+			var changeReponse = await _route53Client.GetChangeAsync(changeRequest);
+			return changeReponse.ChangeInfo.Status == ChangeStatus.PENDING;
 		}
 
 		private async Task<HostedZone> FindHostedZoneAsync(string dnsName)
