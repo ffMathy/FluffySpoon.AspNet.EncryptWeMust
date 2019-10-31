@@ -118,7 +118,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				ChangeBatch = changeBatch
 			};
 
-			_logger.LogInformation($"Creating or updating DNS record {recordType} {recordName}");
+			_logger.LogInformation("Creating or updating DNS record {RecordType} {RecordName}", recordType, recordName);
 
 			var upsertResponse = await _route53Client.ChangeResourceRecordSetsAsync(
 				new ChangeResourceRecordSetsRequest() {
