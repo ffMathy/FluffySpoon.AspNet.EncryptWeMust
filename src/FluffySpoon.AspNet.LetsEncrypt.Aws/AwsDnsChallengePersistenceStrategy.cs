@@ -156,7 +156,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			int bestMatchScore = 0;
 
 			var hostedZones = await _route53Client.ListHostedZonesAsync();
-			while (hostedZones.IsTruncated)
+
+			do
 			{
 				foreach (var hostedZone in hostedZones.HostedZones)
 				{
@@ -184,10 +185,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				}
 
 				hostedZones = await _route53Client.ListHostedZonesAsync(
-					new ListHostedZonesRequest() {
+					new ListHostedZonesRequest()
+					{
 						Marker = hostedZones.Marker
 					});
-			}
+			} while (hostedZones.IsTruncated);
 
 			if (bestMatch == null)
 				_logger.LogInformation("No zone match for {DnsName} found", dnsName);
@@ -212,7 +214,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 					StartRecordName = dnsName
 				});
 
-			while (recordSets.IsTruncated)
+			do
 			{
 				foreach (var recordSet in recordSets.ResourceRecordSets)
 				{
@@ -221,13 +223,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				}
 
 				recordSets = await _route53Client.ListResourceRecordSetsAsync(
-					new ListResourceRecordSetsRequest() {
+					new ListResourceRecordSetsRequest()
+					{
 						HostedZoneId = zone.Id,
 						StartRecordType = recordSets.NextRecordType,
 						StartRecordName = recordSets.NextRecordName,
 						StartRecordIdentifier = recordSets.NextRecordIdentifier
 					});
-			}
+			} while (recordSets.IsTruncated);
 
 			_logger.LogInformation("{Count} record sets were found for {RecordType} {DnsName} in zone {Zone}", result.Count, recordType, dnsName, zone.Name);
 
