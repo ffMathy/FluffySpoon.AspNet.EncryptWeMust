@@ -126,7 +126,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  Func<string, string, Task> deleteAsync)
 		{
 			AddFluffySpoonLetsEncryptDnsChallengePersistence(services,
-				new CustomDnsChallangePersistenceStrategy(
+				new CustomDnsChallengePersistenceStrategy(
 					persistAsync,
 					deleteAsync));
 		}
