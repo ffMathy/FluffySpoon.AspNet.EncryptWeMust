@@ -84,7 +84,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task DeleteChallengesAsync(ChallengeDto[] challenges)
 		{
-			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
+			if (challenges == null)
+				return;
+
+			var dnsChallenges = challenges.Where(x => x.Type == ChallengeType.Dns01);
 			foreach (var dnsChallenge in dnsChallenges)
 			{
 				_logger.LogTrace("Deleting DNS challenge through {0} possible strategies", _dnsChallengePersistenceStrategies.Count());
