@@ -186,7 +186,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 					}
 				}
 
-				hostedZones = await _route53Client.ListHostedZonesAsync(new ListHostedZonesRequest() { Marker = hostedZones.Marker });
+				hostedZones = await _route53Client.ListHostedZonesAsync(
+					new ListHostedZonesRequest() {
+						Marker = hostedZones.Marker
+					});
 			}
 
 			if (bestMatch == null)
