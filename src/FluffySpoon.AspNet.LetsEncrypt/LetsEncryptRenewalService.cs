@@ -238,10 +238,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
 
 			var challengeContexts = await Task.WhenAll(challengeContextTasks);
+			var nonNullChallengeContexts = challengeContexts.Where(x => x != null);
 
 			_logger.LogInformation("Validating all pending order authorizations.");
 
-			var challengeDtos = challengeContexts.Where(x => x != null).Select(x => new ChallengeDto()
+			var challengeDtos = nonNullChallengeContexts.Select(x => new ChallengeDto()
 			{
 				Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
 				Response = x.KeyAuthz,
@@ -252,7 +253,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var challenges = await ValidateChallengesAsync(challengeContexts);
+				var challenges = await ValidateChallengesAsync(nonNullChallengeContexts);
 
 				await _persistenceService.DeleteChallengesAsync(challengeDtos);
 
@@ -271,7 +272,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 		}
 
-		private static async Task<Challenge[]> ValidateChallengesAsync(IChallengeContext[] challengeContexts)
+		private static async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
 		{
 			var challenges = await Task.WhenAll(
 								challengeContexts.Select(x => x.Validate()));
