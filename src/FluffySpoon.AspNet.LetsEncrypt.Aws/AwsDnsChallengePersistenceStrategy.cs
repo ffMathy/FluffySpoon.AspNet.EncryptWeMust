@@ -155,7 +155,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			HostedZone bestMatch = null;
 			int bestMatchScore = 0;
 
-			// Enumerate all hosted zones until a match is found, or until all hosted zones have been enumerated
 			var hostedZones = await _route53Client.ListHostedZonesAsync();
 			while (hostedZones.IsTruncated)
 			{
@@ -165,7 +164,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 
 					if (dnsName.ToLower().EndsWith(DomainSegmentSeparator + hostedZone.Name.ToLower()))
 					{
-						// Matches, calculate score
 						var hostedZoneParts = hostedZone.Name.Split(DomainSegmentSeparator);
 						var score = hostedZoneParts.Length;
 
@@ -173,7 +171,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 						{
 							_logger.LogInformation("Exact match for {DnsName} found (zone {Zone})", dnsName, hostedZone.Name);
 
-							// Exact match found
 							return hostedZone;
 						}
 						else if (score > bestMatchScore)
