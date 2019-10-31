@@ -33,14 +33,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 		{
 			_logger.LogDebug("Starting deletion of {RecordType} {RecordName}", recordType, recordName);
 
-			var zone = await FindHostedZone(recordName);
+			var zone = await FindHostedZoneAsync(recordName);
 			if (zone == null)
 			{
 				_logger.LogDebug("No zone was found");
 				return;
 			}
 
-			var recordSets = await FindRecordSets(zone, recordName, recordType);
+			var recordSets = await FindRecordSetsAsync(zone, recordName, recordType);
 			var changeBatch = new ChangeBatch();
 
 			foreach (var recordSet in recordSets)
@@ -75,7 +75,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 		{
 			_logger.LogDebug("Starting creation or update of {RecordType} {RecordName} with value {RecordValue}", recordType, recordName, recordValue);
 
-			var zone = await FindHostedZone(recordName);
+			var zone = await FindHostedZoneAsync(recordName);
 			if (zone == null)
 			{
 				_logger.LogDebug($"No zone was found");
@@ -123,7 +123,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			}
 		}
 
-		private async Task<HostedZone> FindHostedZone(string dnsName)
+		private async Task<HostedZone> FindHostedZoneAsync(string dnsName)
 		{
 			_logger.LogDebug("Finding hosted zone responsible for {DnsName}", dnsName);
 
@@ -176,7 +176,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			return bestMatch;
 		}
 
-		private async Task<IEnumerable<ResourceRecordSet>> FindRecordSets(HostedZone zone, string dnsName, string recordType)
+		private async Task<IEnumerable<ResourceRecordSet>> FindRecordSetsAsync(HostedZone zone, string dnsName, string recordType)
 		{
 			_logger.LogDebug("Finding record sets for {RecordType} {DnsName} in zone {Zone}", recordType, dnsName, zone.Name);
 
