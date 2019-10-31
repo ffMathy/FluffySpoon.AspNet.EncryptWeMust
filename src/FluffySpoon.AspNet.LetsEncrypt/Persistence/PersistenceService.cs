@@ -64,7 +64,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			var bytes = json == null ? null : Encoding.UTF8.GetBytes(json);
 			await PersistAsync(PersistenceType.Challenges, bytes, _challengePersistenceStrategies);
 
-			var dnsChallenges = challenges?.Where(x => x.Type == ChallengeType.Dns01);
+			if (challenges == null)
+				return;
+
+			var dnsChallenges = challenges.Where(x => x.Type == ChallengeType.Dns01);
 			foreach (var dnsChallenge in dnsChallenges)
 			{
 				_logger.LogTrace("Persisting DNS challenge through {0} possible strategies", _dnsChallengePersistenceStrategies.Count());
