@@ -162,7 +162,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 				{
 					_logger.LogDebug("Checking zone {Zone}", hostedZone.Name);
 
-					if (dnsName.ToLower().EndsWith(DomainSegmentSeparator + hostedZone.Name.ToLower()))
+					if (dnsName.EndsWith(DomainSegmentSeparator + hostedZone.Name, StringComparison.InvariantCultureIgnoreCase))
 					{
 						var hostedZoneParts = hostedZone.Name.Split(DomainSegmentSeparator);
 						var score = hostedZoneParts.Length;
