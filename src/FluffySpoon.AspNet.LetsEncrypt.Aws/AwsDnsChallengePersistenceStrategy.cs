@@ -229,9 +229,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			} while (hostedZones.IsTruncated);
 
 			if (bestMatch == null)
+			{
 				_logger.LogInformation("No zone match for {DnsName} found", dnsName);
+			}
 			else
+			{
 				_logger.LogInformation("Best match for {DnsName} found (zone {Zone})", dnsName, bestMatch.Name);
+			}
 
 			return bestMatch;
 		}
