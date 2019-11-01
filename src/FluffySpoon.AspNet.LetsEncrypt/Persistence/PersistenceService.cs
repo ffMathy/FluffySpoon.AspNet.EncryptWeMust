@@ -73,9 +73,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 				_logger.LogTrace("Persisting DNS challenge through {0} possible strategies", _dnsChallengePersistenceStrategies.Count());
 
 				foreach (var domain in dnsChallenge.Domains) {
-					var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
-					dnsName = String.Format(DnsChallengeNameFormat, dnsName);
-
+					var dnsName = GetChallengeDnsName(domain);
 					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.PersistAsync(dnsName, TxtRecordType, dnsChallenge.Token));
 					await Task.WhenAll(tasks);
 				}
@@ -94,13 +92,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 				foreach (var domain in dnsChallenge.Domains)
 				{
-					var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
-					dnsName = String.Format(DnsChallengeNameFormat, dnsName);
-
+					var dnsName = GetChallengeDnsName(domain);
 					var tasks = _dnsChallengePersistenceStrategies.Select(x => x.DeleteAsync(dnsName, TxtRecordType));
 					await Task.WhenAll(tasks);
 				}
 			}
+		}
+
+		private string GetChallengeDnsName(string domain)
+		{
+			var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
+			dnsName = String.Format(DnsChallengeNameFormat, dnsName);
+
+			return dnsName;
 		}
 
 		private async Task PersistAsync(PersistenceType persistenceType, byte[] bytes, IEnumerable<IPersistenceStrategy> strategies) {
