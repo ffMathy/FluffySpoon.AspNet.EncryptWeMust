@@ -339,6 +339,9 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		{
 			var azureCert = await GetExistingAzureCertificateAsync(persistenceType);
 
+			if (azureCert == null)
+				return null;
+
 			var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 			certStore.Open(OpenFlags.ReadOnly);
 
