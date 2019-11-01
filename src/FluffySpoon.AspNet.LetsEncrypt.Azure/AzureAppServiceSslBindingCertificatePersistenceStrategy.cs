@@ -247,7 +247,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					}
 				}
 
-				logger.LogDebug($"Getting app settings");
+				logger.LogDebug("Getting app settings");
 
 				var appSettings = await client.WebApps.Manager
 					.WebApps
