@@ -156,7 +156,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			if (!_options.ChallengeTypes.HasFlag(ChallengeType.Dns01) && domains.Any(x => x.StartsWith("*.")))
+			if (!_options.ChallengeTypes.Contains(ChallengeType.Dns01) && domains.Any(x => x.StartsWith("*.")))
 				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but DNS challenge/validation is not enabled.");
 
 			var order = await acme.NewOrder(domains);
@@ -231,10 +231,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var allAuthorizations = await order.Authorizations();
 			var challengeContextTasks = new List<Task<IChallengeContext>>();
 
-			if (_options.ChallengeTypes.HasFlag(ChallengeType.Http01))
+			if (_options.ChallengeTypes.Contains(ChallengeType.Http01))
 				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
 
-			if (_options.ChallengeTypes.HasFlag(ChallengeType.Dns01))
+			if (_options.ChallengeTypes.Contains(ChallengeType.Dns01))
 				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
 
 			var challengeContexts = await Task.WhenAll(challengeContextTasks);

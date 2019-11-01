@@ -41,6 +41,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// <summary>
 		/// Gets or sets the challenge types that are enabled. Dns01 must be used if wildcard certificates are requested. Http01 is enabled by default.
 		/// </summary>
-		public ChallengeType ChallengeTypes { get; set; } = ChallengeType.Http01;
+		public ChallengeType[] ChallengeTypes { get; set; } = new ChallengeType[] { ChallengeType.Http01 };
 	}
 }
