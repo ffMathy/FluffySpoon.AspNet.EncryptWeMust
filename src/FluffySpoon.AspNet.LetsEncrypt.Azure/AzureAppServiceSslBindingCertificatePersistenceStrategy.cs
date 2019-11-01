@@ -60,7 +60,9 @@ namespace FluffySpoon.LetsEncrypt.Azure
 		private bool DomainMatches(string certificateDomain, string boundDomain) {
 			if (certificateDomain.StartsWith(WildcardPrefix))
 			{
-				var regexPattern = Regex.Replace(certificateDomain, "^\\*\\.", "^[^.]*\\.");
+				var regexPattern = certificateDomain.Replace(@".", @"\.");
+				regexPattern = Regex.Replace(regexPattern, @"^\*\\\.", @"^[^.]+\.");
+
 				return Regex.IsMatch(boundDomain, regexPattern);
 			}
 
