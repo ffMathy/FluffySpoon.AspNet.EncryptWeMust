@@ -62,6 +62,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			{
 				var regexPattern = certificateDomain.Replace(@".", @"\.");
 				regexPattern = Regex.Replace(regexPattern, @"^\*\\\.", @"^[^.]+\.");
+				regexPattern = Regex.Replace(regexPattern, @"\.?$", @"\.?$");
 
 				return Regex.IsMatch(boundDomain, regexPattern);
 			}
