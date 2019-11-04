@@ -57,7 +57,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return Azure.Authenticate(azureOptions.Credentials).WithDefaultSubscription();
 		}
 
-		private bool DomainMatches(string certificateDomain, string boundDomain) {
+		private bool DoesDomainMatch(string boundDomain, string certificateDomain) {
 			if (certificateDomain.StartsWith(WildcardPrefix))
 			{
 				var regexPattern = certificateDomain.Replace(@".", @"\.");
@@ -68,6 +68,16 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			}
 
 			return certificateDomain.ToLower() == boundDomain.ToLower();
+		}
+
+		private bool DoesDomainMatch(string boundDomain, IEnumerable<string> certificateDomains)
+		{
+			return certificateDomains.Any(certDomain => DoesDomainMatch(boundDomain, certDomain));
+		}
+
+		private bool DoDomainsMatch(IEnumerable<string> boundDomains, IEnumerable<string> certificateDomains)
+		{
+			return boundDomains.Any(boundDomain => DoesDomainMatch(boundDomain, certificateDomains));
 		}
 
 		public async Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
@@ -99,7 +109,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 				if (azureOptions.Slot == null)
 				{
-					if (!app.HostNames.Any(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain))))
+					if (!DoDomainsMatch(app.HostNames, domains))
 						continue;
 
 					relevantApps.Add((app, null));
@@ -108,9 +118,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				{
 					var slots = app.DeploymentSlots
 						.List()
-						.Where(x => x
-							.HostNames
-							.Any(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain))));
+						.Where(x => DoDomainsMatch(x.HostNames, domains));
+
 					if (!slots.Any())
 						continue;
 
@@ -185,7 +194,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
-						.Where(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain)))
+						.Where(boundDomain => DoesDomainMatch(boundDomain, domains))
 						.ToArray();
 				}
 				else
@@ -194,7 +203,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.Slot
 						.HostNames
-						.Where(boundDomain => domains.Any(certDomain => DomainMatches(certDomain, boundDomain)))
+						.Where(boundDomain => DoesDomainMatch(boundDomain, domains))
 						.ToArray();
 				}
 
