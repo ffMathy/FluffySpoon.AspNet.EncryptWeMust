@@ -92,7 +92,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  this IServiceCollection services,
 		  string relativeFilePath = "FluffySpoonAspNetLetsEncryptChallenge")
 		{
-			AddFluffySpoonLetsEncryptCertificatePersistence(services,
+			AddFluffySpoonLetsEncryptChallengePersistence(services,
 				new FilePersistenceStrategy(relativeFilePath));
 		}
 
