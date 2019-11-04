@@ -190,9 +190,7 @@ By default, challenges are validated over HTTP. This requires that the domain be
 
 The use of DNS validation can overcome these issues. The `FluffySpoon.AspNet.LetsEncrypt.Aws` package includes an implementation of DNS challenge support using AWS Route 53.
 
-To implement support for other DNS providers, implement `IDnsChallengePersistenceStrategy` and register it using the `AddFluffySpoonLetsEncryptDnsChallengePersistence` services configuration extension.
-
-To enable DNS challenge support, when configuring the renewal service you must specify `ChallengeTypes = ChallengeType.Dns01 | ChallengeType.Http01` for example:
+DNS support is not enabled by default. To enable DNS challenge support, when configuring the renewal service you must specify `ChallengeType.Dns01` in the list of supported `ChallengeTypes` for example:
 ```
 //the following line adds the automatic renewal service.
 services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
@@ -210,11 +208,11 @@ services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
 		OrganizationUnit = "Hat department",
 		State = "DK"
 	},
-	ChallengeTypes = ChallengeType.Dns01 | ChallengeType.Http01 //enable both HTTP and DNS challenges
+	ChallengeTypes = new ChallengeType[] { ChallengeType.Dns01, ChallengeType.Http01 } //enable both HTTP and DNS challenges
 });
 ```
 
-The example below shows how to add DNS challenge support using the Route 53 implementation:
+You must also register at least one DNS challenge persistence strategy. The example below shows how to add DNS challenge support using the Route 53 implementation:
 
 ```csharp
 services.AddFluffySpoonLetsEncryptAwsRoute53DnsChallengePersistence(
@@ -229,6 +227,37 @@ DNS validation can (and in cases where you're requesting any non-wildcard domain
 
 Wildcard certificates can be requested by supplying a wildcard domain in the list of domains to include in the certificate order e.g. `*.mydomain.com`.
 
+## Custom DNS persistence
+
+To implement support for other DNS providers, implement `IDnsChallengePersistenceStrategy` and register it using the `AddFluffySpoonLetsEncryptDnsChallengePersistence` services configuration extension. 
+
+```csharp
+services.AddFluffySpoonLetsEncryptDnsChallengePersistence(
+	(provider) => new MyDnsChallengePersistenceStrategy(...));
+```
+
+Alternatively, use the overload of `AddFluffySpoonLetsEncryptDnsChallengePersistence` which accepts 2 functions/delegates for persisting and deleting DNS challenges.
+
+```csharp
+services.AddFluffySpoonLetsEncryptDnsChallengePersistence(
+    	(recordName, recordType, recordValue) => { ... }, // Create DNS record
+    	(recordName, recordType, recordValue) => { ... }, // Delete DNS record
+    );
+```
+
+`IDnsChallengePersistenceStrategy` requires 2 methods, one to create and one to delete the required record in DNS.
+
+### PersistAsync
+
+This method persists a challenge record to DNS. The fully qualified name is supplied in `recordName`, the type of record in `recordType` (this is currently always "TXT"), and the value of the record in `recordValue`. Note that some DNS providers will require that TXT values are enclosed with the `"` double quote character. Your implementation is responsible for applying this if necessary.
+
+If your DNS provider supports it, you should allow for multiple values to be present for any given record. The PersistAsync method should add the value to the existing list of values if the record is already present.
+
+### DeleteAsync
+
+Deletion is requested after validation of the certificate has completed. It is highly recommended to implement the deletion of the specified DNS record value, to avoid accumulation of out-of-date challenge tokens.
+
+If your DNS provider supports it, you should allow for multiple values to be present for any given record. The DeleteAsync method should only remove the specified value from the list of values if there is more than one. If the value is the only one, then the whole record can be deleted.
 
 # Hooking into events
 You can register a an `ICertificateRenewalLifecycleHook` implementation which does something when certain events occur, as shown below. This can be useful if you need to notify a Slack channel or send an e-mail if an error occurs, or when the certificate has indeed been renewed.
