@@ -181,7 +181,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var existingAccountKey = await _persistenceService.GetPersistedAccountCertificateAsync();
 			if (existingAccountKey != null)
 			{
-				await	UseExistingLetsEncryptAccount(existingAccountKey);
+				await UseExistingLetsEncryptAccount(existingAccountKey);
 			}
 			else
 			{
