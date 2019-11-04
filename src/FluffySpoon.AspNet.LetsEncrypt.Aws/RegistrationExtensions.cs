@@ -13,7 +13,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			services.AddFluffySpoonLetsEncryptDnsChallengePersistence(
 				(provider) => new AwsDnsChallengePersistenceStrategy(
 					awsOptions,
-					provider.GetRequiredService<ILogger<IAwsDnsChallengePersistenceStrategy>>()));
+					provider.GetRequiredService<ILogger<AwsDnsChallengePersistenceStrategy>>()));
 		}
 	}
 }

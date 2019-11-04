@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 {
-	public class AwsDnsChallengePersistenceStrategy : IDnsChallengePersistenceStrategy, IAwsDnsChallengePersistenceStrategy
+	public class AwsDnsChallengePersistenceStrategy : IDnsChallengePersistenceStrategy
 	{
 		private const char DomainSegmentSeparator = '.';
 		private const string WildcardPrefix = "*.";
@@ -20,10 +20,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 		private const string TxtRecordType = "TXT";
 
 		private readonly AwsOptions _awsOptions;
-		private readonly ILogger<IAwsDnsChallengePersistenceStrategy> _logger;
+		private readonly ILogger<AwsDnsChallengePersistenceStrategy> _logger;
 		private readonly IAmazonRoute53 _route53Client;
 
-		public AwsDnsChallengePersistenceStrategy(AwsOptions awsOptions, ILogger<IAwsDnsChallengePersistenceStrategy> logger)
+		public AwsDnsChallengePersistenceStrategy(AwsOptions awsOptions, ILogger<AwsDnsChallengePersistenceStrategy> logger)
 		{
 			_logger = logger;
 			_awsOptions = awsOptions;
