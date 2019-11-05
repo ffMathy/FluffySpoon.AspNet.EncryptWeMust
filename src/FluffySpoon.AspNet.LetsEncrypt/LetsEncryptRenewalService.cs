@@ -18,6 +18,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
+		private const string WildcardPrefix = "*.";
+
 		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
@@ -156,8 +158,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			if (!_options.ChallengeTypes.Contains(ChallengeType.Dns01) && domains.Any(x => x.StartsWith("*.")))
-				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but DNS challenge/validation is not enabled.");
+			if (domains.Any(x => x.StartsWith(WildcardPrefix)) && !_persistenceService.HasDnsChallengePersistenceStrategies())
+				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but no DNS challenge strategies have been registered.");
 
 			var order = await acme.NewOrder(domains);
 			await ValidateOrderAsync(domains, order);
@@ -231,10 +233,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var allAuthorizations = await order.Authorizations();
 			var challengeContextTasks = new List<Task<IChallengeContext>>();
 
-			if (_options.ChallengeTypes.Contains(ChallengeType.Http01))
+			if (_persistenceService.HasHttpChallengePersistenceStrategies())
 				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
 
-			if (_options.ChallengeTypes.Contains(ChallengeType.Dns01))
+			if (_persistenceService.HasDnsChallengePersistenceStrategies())
 				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
 
 			var challengeContexts = await Task.WhenAll(challengeContextTasks);

@@ -7,6 +7,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
 	public interface IPersistenceService
 	{
+		bool HasHttpChallengePersistenceStrategies();
+		bool HasDnsChallengePersistenceStrategies();
 		Task<IKey> GetPersistedAccountCertificateAsync();
 		Task<ChallengeDto[]> GetPersistedChallengesAsync();
 		Task<X509Certificate2> GetPersistedSiteCertificateAsync();

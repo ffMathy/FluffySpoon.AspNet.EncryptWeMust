@@ -154,5 +154,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 			return null;
 		}
+
+		public bool HasHttpChallengePersistenceStrategies()
+		{
+			return _challengePersistenceStrategies != null && _challengePersistenceStrategies.Any();
+		}
+
+		public bool HasDnsChallengePersistenceStrategies()
+		{
+			return _dnsChallengePersistenceStrategies != null && _dnsChallengePersistenceStrategies.Any();
+		}
 	}
 }

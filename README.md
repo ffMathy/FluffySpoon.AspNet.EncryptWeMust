@@ -190,29 +190,7 @@ By default, challenges are validated over HTTP. This requires that the domain be
 
 The use of DNS validation can overcome these issues. The `FluffySpoon.AspNet.LetsEncrypt.Aws` package includes an implementation of DNS challenge support using AWS Route 53.
 
-DNS support is not enabled by default. To enable DNS challenge support, when configuring the renewal service you must specify `ChallengeType.Dns01` in the list of supported `ChallengeTypes` for example:
-```
-//the following line adds the automatic renewal service.
-services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
-{
-	Email = "some-email@github.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
-	UseStaging = false, //switch to true for testing
-	Domains = new[] { DomainToUse },
-	TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30), //renew automatically 30 days before expiry
-	TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7), //renew automatically 7 days after the last certificate was issued
-	CertificateSigningRequest = new CsrInfo() //these are your certificate details
-	{
-		CountryName = "Denmark",
-		Locality = "DK",
-		Organization = "Fluffy Spoon",
-		OrganizationUnit = "Hat department",
-		State = "DK"
-	},
-	ChallengeTypes = new ChallengeType[] { ChallengeType.Dns01, ChallengeType.Http01 } //enable both HTTP and DNS challenges
-});
-```
-
-You must also register at least one DNS challenge persistence strategy. The example below shows how to add DNS challenge support using the Route 53 implementation:
+DNS support is not enabled by default. To enable DNS challenge support, you must register at least one DNS challenge persistence strategy. The example below shows how to add DNS challenge support using the Route 53 implementation:
 
 ```csharp
 services.AddFluffySpoonLetsEncryptAwsRoute53DnsChallengePersistence(

@@ -37,10 +37,5 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
 		/// </summary>
 		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.LogAndContinue;
-
-		/// <summary>
-		/// Gets or sets the challenge types that are enabled. Dns01 must be used if wildcard certificates are requested. Http01 is enabled by default.
-		/// </summary>
-		public ChallengeType[] ChallengeTypes { get; set; } = new ChallengeType[] { ChallengeType.Http01 };
 	}
 }
