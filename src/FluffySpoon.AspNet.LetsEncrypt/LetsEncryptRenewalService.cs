@@ -261,7 +261,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				var challengeExceptions = challenges
 					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception(x.Error.Type + ": " + x.Error.Detail))
+					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
 					.ToArray();
 				if (challengeExceptions.Length > 0)
 					throw new OrderInvalidException(
