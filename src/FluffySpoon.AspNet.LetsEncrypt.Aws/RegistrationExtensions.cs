@@ -10,7 +10,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			this IServiceCollection services,
 			AwsOptions awsOptions)
 		{
-			services.AddFluffySpoonLetsEncryptDnsChallengePersistence(
+			services.AddFluffySpoonLetsEncryptChallengePersistence(
 				(provider) => new AwsDnsChallengePersistenceStrategy(
 					awsOptions,
 					provider.GetRequiredService<ILogger<AwsDnsChallengePersistenceStrategy>>()));

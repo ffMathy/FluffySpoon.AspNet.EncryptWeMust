@@ -158,7 +158,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			if (domains.Any(x => x.StartsWith(WildcardPrefix)) && !_persistenceService.HasDnsChallengePersistenceStrategies())
+			if (domains.Any(x => x.StartsWith(WildcardPrefix)) && !_persistenceService.HasStrategyForChallengeType(ChallengeType.Dns01))
 				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but no DNS challenge strategies have been registered.");
 
 			var order = await acme.NewOrder(domains);
@@ -228,16 +228,24 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return pfxBytes;
 		}
 
+		private ChallengeType GetChallengeType(string type)
+		{
+			switch (type)
+			{
+				case ChallengeTypes.Dns01: return ChallengeType.Dns01;
+				case ChallengeTypes.Http01: return ChallengeType.Http01;
+			}
+
+			throw new ArgumentException($"Challenge Type {type} not supported.");
+		}
+
 		private async Task ValidateOrderAsync(string[] domains, IOrderContext order)
 		{
 			var allAuthorizations = await order.Authorizations();
 			var challengeContextTasks = new List<Task<IChallengeContext>>();
 
-			if (_persistenceService.HasHttpChallengePersistenceStrategies())
-				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
-
-			if (_persistenceService.HasDnsChallengePersistenceStrategies())
-				challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
+			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
+			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
 
 			var challengeContexts = await Task.WhenAll(challengeContextTasks);
 			var nonNullChallengeContexts = challengeContexts.Where(x => x != null);
@@ -248,7 +256,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			{
 				Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
 				Response = x.KeyAuthz,
-				Type = x.Type == ChallengeTypes.Dns01 ? ChallengeType.Dns01 : ChallengeType.Http01,
+				Type = GetChallengeType(x.Type),
 				Domains = domains
 			}).ToArray();
 			await _persistenceService.PersistChallengesAsync(challengeDtos);

@@ -87,7 +87,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return boundDomains.Any(boundDomain => DoesDomainMatch(boundDomain, certificateDomains));
 		}
 
-		public async Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
+		public async Task PersistAsync(CertificateType persistenceType, byte[] bytes)
 		{
 			if (bytes.Length == 0)
 			{
@@ -95,7 +95,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				return;
 			}
 
-			if (persistenceType != PersistenceType.Site)
+			if (persistenceType != CertificateType.Site)
 			{
 				logger.LogTrace("Skipping certificate persistence because a certificate of type {0} can't be persisted in Azure.", persistenceType);
 				return;
@@ -305,7 +305,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return existingBinding == null || existingBinding.SslState != SslState.SniEnabled || existingBinding.Thumbprint != certificateThumbprint;
 		}
 
-		public async Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
+		public async Task<byte[]> RetrieveAsync(CertificateType persistenceType)
 		{
 			var certificate = await GetExistingCertificateAsync(persistenceType);
 
@@ -326,9 +326,9 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return pfxBlob;
 		}
 
-		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(PersistenceType persistenceType)
+		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(CertificateType persistenceType)
 		{
-			if (persistenceType != PersistenceType.Site)
+			if (persistenceType != CertificateType.Site)
 			{
 				logger.LogTrace("Skipping certificate retrieval of a certificate of type {0}, which can't be persisted in Azure.", persistenceType);
 				return null;
@@ -354,7 +354,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return null;
 		}
 
-		private async Task<X509Certificate2> GetExistingCertificateAsync(PersistenceType persistenceType)
+		private async Task<X509Certificate2> GetExistingCertificateAsync(CertificateType persistenceType)
 		{
 			var azureCert = await GetExistingAzureCertificateAsync(persistenceType);
 

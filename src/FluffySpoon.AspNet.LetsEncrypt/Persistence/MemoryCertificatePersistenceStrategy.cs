@@ -3,16 +3,16 @@ using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
-	class MemoryPersistenceStrategy : ICertificatePersistenceStrategy, IChallengePersistenceStrategy
+	class MemoryCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
-		private IDictionary<PersistenceType, byte[]> bytes;
+		private IDictionary<CertificateType, byte[]> bytes;
 
-		public MemoryPersistenceStrategy()
+		public MemoryCertificatePersistenceStrategy()
 		{
-			bytes = new Dictionary<PersistenceType, byte[]>();
+			bytes = new Dictionary<CertificateType, byte[]>();
 		}
 
-		public Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
+		public Task PersistAsync(CertificateType persistenceType, byte[] bytes)
 		{
 			if (this.bytes.ContainsKey(persistenceType))
 			{
@@ -34,7 +34,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
+		public Task<byte[]> RetrieveAsync(CertificateType persistenceType)
 		{
 			if(bytes.ContainsKey(persistenceType))
 				return Task.FromResult(bytes[persistenceType]);

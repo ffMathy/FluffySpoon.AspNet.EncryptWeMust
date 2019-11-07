@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 {
-	public class DistributedCachePersistenceStrategy : CustomPersistenceStrategy
+	public class DistributedCacheCertificatePersistenceStrategy : CustomCertificatePersistenceStrategy
 	{
 		private const string KeyPrefix = "FluffySpoon_";
 
-		public DistributedCachePersistenceStrategy(
-			ILogger logger,
+		public DistributedCacheCertificatePersistenceStrategy(
+			ILogger<DistributedCacheCertificatePersistenceStrategy> logger,
 			IDistributedCache cache, 
 			TimeSpan expiry) : base(
 				async (key, bytes) =>

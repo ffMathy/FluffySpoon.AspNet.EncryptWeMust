@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +28,36 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 					.Certificates
 					.SingleOrDefault(x => x.Key == key.ToString())
 					?.Bytes);
+
+			services.AddFluffySpoonLetsEncryptEntityFrameworkChallengePersistence<DatabaseContext>(
+				async (databaseContext, challenges) => databaseContext
+					.Challenges
+					.AddRange(
+						challenges.Select(x =>
+							new Challenge()
+							{
+								Token = x.Token,
+								Response = x.Response,
+								Type = (int)x.Type,
+								Domains = String.Join(",", x.Domains)
+							})),
+				async (databaseContext) => databaseContext
+					.Challenges
+					.Select(x =>
+						new ChallengeDto()
+						{
+							Token = x.Token,
+							Response = x.Response,
+							Type = (ChallengeType)x.Type,
+							Domains = x.Domains.Split(',', StringSplitOptions.RemoveEmptyEntries)
+						}),
+				async (databaseContext, challenges) => databaseContext
+					.Challenges
+					.RemoveRange(
+						databaseContext
+							.Challenges
+							.Where(x => challenges.Any(y => y.Token == x.Token))
+						));
 
 			services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
 			{

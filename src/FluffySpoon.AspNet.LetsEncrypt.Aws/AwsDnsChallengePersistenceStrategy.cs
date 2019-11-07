@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 {
-	public class AwsDnsChallengePersistenceStrategy : IDnsChallengePersistenceStrategy
+	public class AwsDnsChallengePersistenceStrategy : BaseDnsChallengePersistenceStrategy<AwsDnsChallengePersistenceStrategy>
 	{
 		private const char DomainSegmentSeparator = '.';
 		private const string WildcardPrefix = "*.";
@@ -23,14 +23,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 		private readonly ILogger<AwsDnsChallengePersistenceStrategy> _logger;
 		private readonly IAmazonRoute53 _route53Client;
 
-		public AwsDnsChallengePersistenceStrategy(AwsOptions awsOptions, ILogger<AwsDnsChallengePersistenceStrategy> logger)
+		public AwsDnsChallengePersistenceStrategy(AwsOptions awsOptions, ILogger<AwsDnsChallengePersistenceStrategy> logger) : base(logger)
 		{
-			_logger = logger;
 			_awsOptions = awsOptions;
 			_route53Client = new AmazonRoute53Client(awsOptions.Credentials, awsOptions.Region);
 		}
 
-		public async Task DeleteAsync(string recordName, string recordType, string recordValue)
+		protected override async Task DeleteAsync(string recordName, string recordType, string recordValue)
 		{
 			_logger.LogDebug("Starting deletion of {RecordType} {RecordName} with value {RecordValue}", recordType, recordName, recordValue);
 
@@ -89,7 +88,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 			}
 		}
 
-		public async Task PersistAsync(string recordName, string recordType, string recordValue)
+		protected override async Task PersistAsync(string recordName, string recordType, string recordValue)
 		{
 			_logger.LogDebug("Starting creation or update of {RecordType} {RecordName} with value {RecordValue}", recordType, recordName, recordValue);
 
