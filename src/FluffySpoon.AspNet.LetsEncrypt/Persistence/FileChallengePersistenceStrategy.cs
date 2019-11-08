@@ -12,12 +12,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 	public class FileChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{
 		private readonly string _relativeFilePath;
-		private readonly ILogger<FileChallengePersistenceStrategy> _logger;
 
-		public FileChallengePersistenceStrategy(string relativeFilePath, ILogger<FileChallengePersistenceStrategy> logger)
+		public FileChallengePersistenceStrategy(string relativeFilePath)
 		{
 			_relativeFilePath = relativeFilePath;
-			_logger = logger;
 		}
 
 		public Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
@@ -33,7 +31,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		public Task PersistAsync(IEnumerable<ChallengeDto> challenges)
 		{
 			var json = challenges == null ? null : JsonConvert.SerializeObject(challenges.ToArray());
-			_logger.LogDebug("Persisting challenges {0}", json);
 
 			var bytes = json == null ? null : Encoding.UTF8.GetBytes(json);
 
