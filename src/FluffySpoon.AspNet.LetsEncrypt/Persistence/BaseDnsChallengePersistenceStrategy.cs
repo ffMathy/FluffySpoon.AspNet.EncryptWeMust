@@ -22,9 +22,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			this._logger = logger;
 		}
 
-		public virtual IEnumerable<ChallengeType> GetSupportedChallengeTypes()
+		public virtual bool CanHandleChallengeType(ChallengeType challengeType)
 		{
-			return new ChallengeType[] { ChallengeType.Dns01 };
+			return challengeType == ChallengeType.Dns01;
 		}
 
 		public virtual async Task DeleteAsync(IEnumerable<ChallengeDto> challenges)

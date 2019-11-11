@@ -7,10 +7,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 	public interface IChallengePersistenceStrategy
 	{
 		/// <summary>
-		/// Gets the challenge types that are supported by this strategy.
+		/// Indicates if a strategy supports a particular challenge type.
 		/// </summary>
 		/// <returns></returns>
-		IEnumerable<ChallengeType> GetSupportedChallengeTypes();
+		bool CanHandleChallengeType(ChallengeType challengeType);
 
 		/// <summary>
 		/// The async method to use for persisting a challenge.

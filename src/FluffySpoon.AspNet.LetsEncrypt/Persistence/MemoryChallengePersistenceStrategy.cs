@@ -20,9 +20,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return Task.CompletedTask;
 		}
 
-		public IEnumerable<ChallengeType> GetSupportedChallengeTypes()
+		public bool CanHandleChallengeType(ChallengeType challengeType)
 		{
-			return new ChallengeType[] { ChallengeType.Http01 };
+			return challengeType == ChallengeType.Http01;
 		}
 
 		public Task PersistAsync(IEnumerable<ChallengeDto> challenges)

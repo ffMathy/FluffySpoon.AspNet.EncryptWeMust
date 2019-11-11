@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 
@@ -43,9 +44,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return _deleteAsync(challenges);
 		}
 
-		public IEnumerable<ChallengeType> GetSupportedChallengeTypes()
+		public bool CanHandleChallengeType(ChallengeType challengeType)
 		{
-			return _supportedChallengeTypes;
+			return _supportedChallengeTypes.Contains(challengeType);
 		}
 	}
 }

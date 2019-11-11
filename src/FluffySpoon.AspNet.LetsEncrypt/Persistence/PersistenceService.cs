@@ -82,7 +82,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 			var tasks = strategies.Select(x =>
 				x.PersistAsync(
-					challenges.Where(y => x.GetSupportedChallengeTypes().Contains(y.Type))
+					challenges.Where(y => x.CanHandleChallengeType(y.Type))
 				)
 			);
 
@@ -143,7 +143,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 			var tasks = strategies.Select(x =>
 				x.DeleteAsync(
-					challenges.Where(y => x.GetSupportedChallengeTypes().Contains(y.Type))
+					challenges.Where(y => x.CanHandleChallengeType(y.Type))
 				)
 			);
 
@@ -152,7 +152,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public bool HasStrategyForChallengeType(ChallengeType challengeType)
 		{
-			return _challengePersistenceStrategies.Any(x => x.GetSupportedChallengeTypes().Contains(challengeType));
+			return _challengePersistenceStrategies.Any(x => x.CanHandleChallengeType(challengeType));
 		}
 	}
 }
