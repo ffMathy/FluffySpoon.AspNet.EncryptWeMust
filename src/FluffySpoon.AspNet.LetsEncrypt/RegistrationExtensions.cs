@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,11 +29,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public static void AddFluffySpoonLetsEncryptCertificatePersistence(
 			this IServiceCollection services,
-			Func<PersistenceType, byte[], Task> persistAsync,
-			Func<PersistenceType, Task<byte[]>> retrieveAsync)
+			Func<CertificateType, byte[], Task> persistAsync,
+			Func<CertificateType, Task<byte[]>> retrieveAsync)
 		{
 			AddFluffySpoonLetsEncryptCertificatePersistence(services,
-				new CustomPersistenceStrategy(
+				new CustomCertificatePersistenceStrategy(
 					persistAsync,
 					retrieveAsync));
 		}
@@ -58,18 +59,22 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  string relativeFilePath = "FluffySpoonAspNetLetsEncryptCertificate")
 		{
 			AddFluffySpoonLetsEncryptCertificatePersistence(services,
-				new FilePersistenceStrategy(relativeFilePath));
+				new FileCertificatePersistenceStrategy(relativeFilePath));
 		}
 
 		public static void AddFluffySpoonLetsEncryptChallengePersistence(
 			this IServiceCollection services,
-			Func<PersistenceType, byte[], Task> persistAsync,
-			Func<PersistenceType, Task<byte[]>> retrieveAsync)
+			IEnumerable<ChallengeType> supportedChallengeTypes,
+			PersistChallengesDelegate persistAsync,
+			RetrieveChallengesDelegate retrieveAsync,
+			DeleteChallengesDelegate deleteAsync)
 		{
 			AddFluffySpoonLetsEncryptChallengePersistence(services,
-				new CustomPersistenceStrategy(
+				new CustomChallengePersistenceStrategy(
+					supportedChallengeTypes,
 					persistAsync,
-					retrieveAsync));
+					retrieveAsync,
+					deleteAsync));
 		}
 
 		public static void AddFluffySpoonLetsEncryptChallengePersistence(
@@ -93,7 +98,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		  string relativeFilePath = "FluffySpoonAspNetLetsEncryptChallenge")
 		{
 			AddFluffySpoonLetsEncryptChallengePersistence(services,
-				new FilePersistenceStrategy(relativeFilePath));
+				new FileChallengePersistenceStrategy(relativeFilePath));
 		}
 
 		public static void AddFluffySpoonLetsEncryptMemoryChallengePersistence(
@@ -101,7 +106,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{	
 			AddFluffySpoonLetsEncryptChallengePersistence(
 				services,
-				new MemoryPersistenceStrategy());
+				new MemoryChallengePersistenceStrategy());
+		}
+
+		public static void AddFluffySpoonLetsEncryptMemoryCertficatesPersistence(
+		  this IServiceCollection services)
+		{
+			AddFluffySpoonLetsEncryptCertificatePersistence(
+				services,
+				new MemoryCertificatePersistenceStrategy());
 		}
 
 		public static void AddFluffySpoonLetsEncryptRenewalService(

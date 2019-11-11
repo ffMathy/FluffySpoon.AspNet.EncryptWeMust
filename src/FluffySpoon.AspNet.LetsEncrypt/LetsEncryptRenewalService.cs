@@ -18,6 +18,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
+		private const string WildcardPrefix = "*.";
+
 		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
@@ -156,8 +158,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
+			if (domains.Any(x => x.StartsWith(WildcardPrefix)) && !_persistenceService.HasStrategyForChallengeType(ChallengeType.Dns01))
+				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but no DNS challenge strategies have been registered.");
+
 			var order = await acme.NewOrder(domains);
-			await ValidateOrderAsync(order);
+			await ValidateOrderAsync(domains, order);
 
 			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
 			if (certificateBytes == null)
@@ -223,27 +228,48 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return pfxBytes;
 		}
 
-		private async Task ValidateOrderAsync(IOrderContext order)
+		private ChallengeType GetChallengeType(string type)
+		{
+			switch (type)
+			{
+				case ChallengeTypes.Dns01: return ChallengeType.Dns01;
+				case ChallengeTypes.Http01: return ChallengeType.Http01;
+			}
+
+			throw new ArgumentException($"Challenge Type {type} not supported.");
+		}
+
+		private async Task ValidateOrderAsync(string[] domains, IOrderContext order)
 		{
 			var allAuthorizations = await order.Authorizations();
-			var challengeContexts = await Task.WhenAll(
-				allAuthorizations.Select(x => x.Http()));
+			var challengeContextTasks = new List<Task<IChallengeContext>>();
+
+			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
+			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
+
+			var challengeContexts = await Task.WhenAll(challengeContextTasks);
+			var nonNullChallengeContexts = challengeContexts.Where(x => x != null);
 
 			_logger.LogInformation("Validating all pending order authorizations.");
 
-			var challengeDtos = challengeContexts.Select(x => new ChallengeDto()
+			var challengeDtos = nonNullChallengeContexts.Select(x => new ChallengeDto()
 			{
-				Token = x.Token,
-				Response = x.KeyAuthz
+				Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
+				Response = x.KeyAuthz,
+				Type = GetChallengeType(x.Type),
+				Domains = domains
 			}).ToArray();
 			await _persistenceService.PersistChallengesAsync(challengeDtos);
 
 			try
 			{
-				var challenges = await ValidateChallengesAsync(challengeContexts);
+				var challenges = await ValidateChallengesAsync(nonNullChallengeContexts);
+
+				await _persistenceService.DeleteChallengesAsync(challengeDtos);
+
 				var challengeExceptions = challenges
 					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception(x.Error.Type + ": " + x.Error.Detail))
+					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
 					.ToArray();
 				if (challengeExceptions.Length > 0)
 					throw new OrderInvalidException(
@@ -256,14 +282,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 		}
 
-		private static async Task<Challenge[]> ValidateChallengesAsync(IChallengeContext[] challengeContexts)
+		private static async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
 		{
 			var challenges = await Task.WhenAll(
 								challengeContexts.Select(x => x.Validate()));
 
 			while (true)
 			{
-				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending))
+				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending || x.Status == ChallengeStatus.Processing))
 					break;
 
 				await Task.Delay(1000);

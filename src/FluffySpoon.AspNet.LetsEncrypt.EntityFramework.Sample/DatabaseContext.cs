@@ -6,6 +6,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 	public class DatabaseContext : DbContext
 	{
 		public DbSet<Certificate> Certificates { get; set; }
+		public DbSet<Challenge> Challenges { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{

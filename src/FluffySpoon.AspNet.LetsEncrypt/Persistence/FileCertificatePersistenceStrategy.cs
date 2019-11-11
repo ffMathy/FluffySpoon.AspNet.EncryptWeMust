@@ -3,18 +3,18 @@ using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
-	public class FilePersistenceStrategy : ICertificatePersistenceStrategy, IChallengePersistenceStrategy
+	public class FileCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
 		private readonly string relativeFilePath;
 
-		public FilePersistenceStrategy(string relativeFilePath)
+		public FileCertificatePersistenceStrategy(string relativeFilePath)
 		{
 			this.relativeFilePath = relativeFilePath;
 		}
 
-		public Task PersistAsync(PersistenceType persistenceType, byte[] certificateBytes)
+		public Task PersistAsync(CertificateType persistenceType, byte[] certificateBytes)
 		{
-			lock (typeof(FilePersistenceStrategy))
+			lock (typeof(FileCertificatePersistenceStrategy))
 			{
 				File.WriteAllBytes(
 					GetCertificatePath(persistenceType),
@@ -24,9 +24,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
+		public Task<byte[]> RetrieveAsync(CertificateType persistenceType)
 		{
-			lock (typeof(FilePersistenceStrategy))
+			lock (typeof(FileCertificatePersistenceStrategy))
 			{
 				if (!File.Exists(GetCertificatePath(persistenceType)))
 					return Task.FromResult<byte[]>(null);
@@ -35,7 +35,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			}
 		}
 
-		private string GetCertificatePath(PersistenceType persistenceType)
+		private string GetCertificatePath(CertificateType persistenceType)
 		{
 			return relativeFilePath + "_" + persistenceType.ToString();
 		}

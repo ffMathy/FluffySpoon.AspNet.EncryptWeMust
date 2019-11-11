@@ -9,6 +9,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 	using System.IO;
 	using System.Linq;
 	using System.Security.Cryptography.X509Certificates;
+	using System.Text.RegularExpressions;
 	using System.Threading.Tasks;
 	using FluffySpoon.AspNet.LetsEncrypt;
 	using Microsoft.Azure.Management.AppService.Fluent;
@@ -17,6 +18,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
+		private const string WildcardPrefix = "*.";
 		private const string AzureCertThumbprintsAppSettingName = "WEBSITE_LOAD_CERTIFICATES";
 
 		private readonly AzureOptions azureOptions;
@@ -55,7 +57,37 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return Azure.Authenticate(azureOptions.Credentials).WithDefaultSubscription();
 		}
 
-		public async Task PersistAsync(PersistenceType persistenceType, byte[] bytes)
+		private bool DoesDomainMatch(string boundDomain, string certificateDomain) {
+			if (certificateDomain.StartsWith(WildcardPrefix))
+			{
+				var regexPattern = ConstructWildcardDomainMatchingRegularExpression(certificateDomain);
+
+				return Regex.IsMatch(boundDomain, regexPattern);
+			}
+
+			return certificateDomain.ToLower() == boundDomain.ToLower();
+		}
+
+		private string ConstructWildcardDomainMatchingRegularExpression(string wildcardDomain)
+		{
+			var regexPattern = wildcardDomain.Replace(@".", @"\.");
+			regexPattern = Regex.Replace(regexPattern, @"^\*\\\.", @"^[^.]+\.");
+			regexPattern = Regex.Replace(regexPattern, @"\.?$", @"\.?$");
+
+			return regexPattern;
+		}
+
+		private bool DoesDomainMatch(string boundDomain, IEnumerable<string> certificateDomains)
+		{
+			return certificateDomains.Any(certDomain => DoesDomainMatch(boundDomain, certDomain));
+		}
+
+		private bool DoDomainsMatch(IEnumerable<string> boundDomains, IEnumerable<string> certificateDomains)
+		{
+			return boundDomains.Any(boundDomain => DoesDomainMatch(boundDomain, certificateDomains));
+		}
+
+		public async Task PersistAsync(CertificateType persistenceType, byte[] bytes)
 		{
 			if (bytes.Length == 0)
 			{
@@ -63,7 +95,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				return;
 			}
 
-			if (persistenceType != PersistenceType.Site)
+			if (persistenceType != CertificateType.Site)
 			{
 				logger.LogTrace("Skipping certificate persistence because a certificate of type {0} can't be persisted in Azure.", persistenceType);
 				return;
@@ -71,7 +103,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 
 			var domains = letsEncryptOptions.Domains.ToArray();
 
-			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, domains);
+			logger.LogInformation("Creating new Azure certificate for key {0} and domains {1}.", persistenceType, String.Join(", ", domains));
 
 			var apps = await client.WebApps.ListByResourceGroupAsync(azureOptions.ResourceGroupName);
 
@@ -80,11 +112,11 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			var relevantApps = new HashSet<(IWebApp App, IDeploymentSlot Slot)>();
 			foreach (var app in apps)
 			{
-				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, domains);
+				logger.LogTrace("Checking hostnames of app {0} ({1}) against domains {2}.", app.Name, app.HostNames, String.Join(", ", domains));
 
 				if (azureOptions.Slot == null)
 				{
-					if (!app.HostNames.Any(domains.Contains))
+					if (!DoDomainsMatch(app.HostNames, domains))
 						continue;
 
 					relevantApps.Add((app, null));
@@ -93,9 +125,8 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				{
 					var slots = app.DeploymentSlots
 						.List()
-						.Where(x => x
-							.HostNames
-							.Any(domains.Contains));
+						.Where(x => DoDomainsMatch(x.HostNames, domains));
+
 					if (!slots.Any())
 						continue;
 
@@ -170,7 +201,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.App
 						.HostNames
-						.Where(domains.Contains)
+						.Where(boundDomain => DoesDomainMatch(boundDomain, domains))
 						.ToArray();
 				}
 				else
@@ -179,7 +210,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					domainsToUpgrade = appTuple
 						.Slot
 						.HostNames
-						.Where(domains.Contains)
+						.Where(boundDomain => DoesDomainMatch(boundDomain, domains))
 						.ToArray();
 				}
 
@@ -235,7 +266,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 					}
 				}
 
-				logger.LogDebug($"Getting app settings");
+				logger.LogDebug("Getting app settings");
 
 				var appSettings = await client.WebApps.Manager
 					.WebApps
@@ -274,7 +305,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return existingBinding == null || existingBinding.SslState != SslState.SniEnabled || existingBinding.Thumbprint != certificateThumbprint;
 		}
 
-		public async Task<byte[]> RetrieveAsync(PersistenceType persistenceType)
+		public async Task<byte[]> RetrieveAsync(CertificateType persistenceType)
 		{
 			var certificate = await GetExistingCertificateAsync(persistenceType);
 
@@ -295,9 +326,9 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return pfxBlob;
 		}
 
-		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(PersistenceType persistenceType)
+		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(CertificateType persistenceType)
 		{
-			if (persistenceType != PersistenceType.Site)
+			if (persistenceType != CertificateType.Site)
 			{
 				logger.LogTrace("Skipping certificate retrieval of a certificate of type {0}, which can't be persisted in Azure.", persistenceType);
 				return null;
@@ -323,9 +354,12 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return null;
 		}
 
-		private async Task<X509Certificate2> GetExistingCertificateAsync(PersistenceType persistenceType)
+		private async Task<X509Certificate2> GetExistingCertificateAsync(CertificateType persistenceType)
 		{
 			var azureCert = await GetExistingAzureCertificateAsync(persistenceType);
+
+			if (azureCert == null)
+				return null;
 
 			var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 			certStore.Open(OpenFlags.ReadOnly);

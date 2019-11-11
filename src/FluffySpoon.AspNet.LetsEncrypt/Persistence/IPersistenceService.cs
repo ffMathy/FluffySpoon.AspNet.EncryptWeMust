@@ -13,5 +13,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		Task PersistAccountCertificateAsync(IKey certificate);
 		Task PersistChallengesAsync(ChallengeDto[] challenges);
 		Task PersistSiteCertificateAsync(byte[] certificateBytes);
+		Task DeleteChallengesAsync(ChallengeDto[] challenges);
+		bool HasStrategyForChallengeType(ChallengeType challengeType);
 	}
 }
