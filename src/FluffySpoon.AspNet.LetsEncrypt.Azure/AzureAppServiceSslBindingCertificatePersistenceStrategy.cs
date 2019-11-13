@@ -176,7 +176,7 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				foreach (var tag in azureCertificate.Tags)
 					tags.Add(tag.Key, tag.Value);
 
-				tags.Add(TagName, persistenceType.ToString());
+				tags.Add(TagName, GetTagValue(persistenceType));
 
 				logger.LogInformation("Updating tags: {0}.", tags);
 
@@ -326,11 +326,11 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			return pfxBlob;
 		}
 
-		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(CertificateType persistenceType)
+		private async Task<IAppServiceCertificate> GetExistingAzureCertificateAsync(CertificateType certificateType)
 		{
-			if (persistenceType != CertificateType.Site)
+			if (certificateType != CertificateType.Site)
 			{
-				logger.LogTrace("Skipping certificate retrieval of a certificate of type {0}, which can't be persisted in Azure.", persistenceType);
+				logger.LogTrace("Skipping certificate retrieval of a certificate of type {0}, which can't be persisted in Azure.", certificateType);
 				return null;
 			}
 
@@ -338,12 +338,14 @@ namespace FluffySpoon.LetsEncrypt.Azure
 				.AppServiceCertificates
 				.ListByResourceGroupAsync(azureOptions.ResourceGroupName);
 
-			logger.LogInformation("Trying to find existing Azure certificate with key {0}.", persistenceType);
+			logger.LogInformation("Trying to find existing Azure certificate with key {0}.", certificateType);
+
+			var expectedTagValue = GetTagValue(certificateType);
 
 			foreach (var certificate in certificates)
 			{
 				var tags = certificate.Tags;
-				if (!tags.ContainsKey(TagName) || tags[TagName] != persistenceType.ToString())
+				if (!tags.ContainsKey(TagName) || tags[TagName] != expectedTagValue)
 					continue;
 
 				return certificate;
@@ -352,6 +354,14 @@ namespace FluffySpoon.LetsEncrypt.Azure
 			logger.LogInformation("Could not find existing Azure certificate.");
 
 			return null;
+		}
+
+		private string GetTagValue(CertificateType certificateType)
+		{
+			if (letsEncryptOptions.UseStaging)
+				return $"{certificateType}-Staging";
+			else
+				return certificateType.ToString();
 		}
 
 		private async Task<X509Certificate2> GetExistingCertificateAsync(CertificateType persistenceType)
