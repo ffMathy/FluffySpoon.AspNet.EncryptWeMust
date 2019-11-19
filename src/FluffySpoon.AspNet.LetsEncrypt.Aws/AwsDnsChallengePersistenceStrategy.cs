@@ -27,6 +27,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Aws
 		{
 			_awsOptions = awsOptions;
 			_route53Client = new AmazonRoute53Client(awsOptions.Credentials, awsOptions.Region);
+			_logger = logger;
 		}
 
 		protected override async Task DeleteAsync(string recordName, string recordType, string recordValue)
