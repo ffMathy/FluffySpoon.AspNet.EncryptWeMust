@@ -1,5 +1,6 @@
 ﻿using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
@@ -15,7 +16,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
 		{
-			_challenges = new List<ChallengeDto>();
+			_challenges = _challenges
+				.Where(x =>
+					!challenges.Any(y => y.Token == x.Token))
+				.ToList();
 
 			return Task.CompletedTask;
 		}
