@@ -278,7 +278,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 			finally
 			{
-				await _persistenceService.PersistChallengesAsync(null);
+				await _persistenceService.DeleteChallengesAsync(challengeDtos);
 			}
 		}
 

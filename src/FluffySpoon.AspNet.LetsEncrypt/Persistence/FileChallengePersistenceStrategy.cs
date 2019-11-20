@@ -18,9 +18,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			_relativeFilePath = relativeFilePath;
 		}
 
-		public Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
+		public async Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
 		{
-			throw new System.NotImplementedException();
+			var persistedChallenges = await RetrieveAsync();
+			var challengesToPersist = persistedChallenges
+				.Where(x => 
+					!challenges.Any(y => y.Token == x.Token))
+				.ToList();
+
+			await PersistAsync(challengesToPersist);
 		}
 
 		public bool CanHandleChallengeType(ChallengeType challengeType)
@@ -37,7 +43,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			lock (typeof(FileChallengePersistenceStrategy))
 			{
 				File.WriteAllBytes(
-					GetCertificatePath(),
+					GetChallengesStorePath(),
 					bytes);
 			}
 
@@ -48,10 +54,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		{
 			lock (typeof(FileChallengePersistenceStrategy))
 			{
-				if (!File.Exists(GetCertificatePath()))
+				if (!File.Exists(GetChallengesStorePath()))
 					return Task.FromResult<IEnumerable<ChallengeDto>>(new List<ChallengeDto>());
 
-				var bytes = File.ReadAllBytes(GetCertificatePath());
+				var bytes = File.ReadAllBytes(GetChallengesStorePath());
 				var json = Encoding.UTF8.GetString(bytes);
 				var challenges = JsonConvert.DeserializeObject<IEnumerable<ChallengeDto>>(json);
 
@@ -59,7 +65,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			}
 		}
 
-		private string GetCertificatePath()
+		private string GetChallengesStorePath()
 		{
 			return _relativeFilePath + "_Challenges";
 		}
