@@ -211,8 +211,10 @@ The easiest way to get some usable credentials is to use a [System Assigned Mana
 Having done that the following snippet sets this up:
 
 ```csharp
-var managedIdentityCredentials = new AzureCredentialsFactory().FromMSI(new MSILoginInformation(MSIResourceType.AppService),
-                                                                       AzureEnvironment.AzureGlobalCloud);
+var managedIdentityCredentials = new AzureCredentialsFactory()
+  .FromMSI(
+     new MSILoginInformation(MSIResourceType.AppService),
+     AzureEnvironment.AzureGlobalCloud);
 
 services.AddFluffySpoonLetsEncryptAzureAppServiceSslBindingCertificatePersistence(
   new AzureOptions {
