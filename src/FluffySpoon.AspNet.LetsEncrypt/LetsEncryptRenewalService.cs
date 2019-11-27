@@ -263,15 +263,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var challengeResponses = await ValidateChallengesAsync(nonNullChallengeContexts);
-				var nonNullChallengeResponses = challengeResponses.Where(x => x != null).ToArray();
+				var challengeValidationResponses = await ValidateChallengesAsync(nonNullChallengeContexts);
+				var nonNullChallengeValidationResponses = challengeValidationResponses.Where(x => x != null).ToArray();
 
-				if (challengeResponses.Length > nonNullChallengeResponses.Length)
+				if (challengeValidationResponses.Length > nonNullChallengeValidationResponses.Length)
 					_logger.LogWarning("Some challenge responses were null.");
 							   
 				await _persistenceService.DeleteChallengesAsync(challengeDtos);
 
-				var challengeExceptions = nonNullChallengeResponses
+				var challengeExceptions = nonNullChallengeValidationResponses
 					.Where(x => x.Status == ChallengeStatus.Invalid)
 					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
 					.ToArray();
