@@ -263,14 +263,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var challenges = await ValidateChallengesAsync(nonNullChallengeContexts);
+				var challengeValidationResponses = await ValidateChallengesAsync(nonNullChallengeContexts);
+				var nonNullChallengeValidationResponses = challengeValidationResponses.Where(x => x != null).ToArray();
 
+				if (challengeValidationResponses.Length > nonNullChallengeValidationResponses.Length)
+					_logger.LogWarning("Some challenge responses were null.");
+							   
 				await _persistenceService.DeleteChallengesAsync(challengeDtos);
 
-				var challengeExceptions = challenges
+				var challengeExceptions = nonNullChallengeValidationResponses
 					.Where(x => x.Status == ChallengeStatus.Invalid)
 					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
 					.ToArray();
+
 				if (challengeExceptions.Length > 0)
 					throw new OrderInvalidException(
 						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
