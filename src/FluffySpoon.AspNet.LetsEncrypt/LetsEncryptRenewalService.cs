@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -273,7 +272,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				var challengeExceptions = nonNullChallengeValidationResponses
 					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
+					.Select(x => new Exception($"{x.Error?.Type ?? "errortype null"}: {x.Error?.Detail ?? "null errordetails"} (challenge type {x.Type ?? "null"})"))
 					.ToArray();
 
 				if (challengeExceptions.Length > 0)
