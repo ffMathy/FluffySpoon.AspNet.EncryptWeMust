@@ -275,10 +275,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					.Select(x => new Exception($"{x.Error?.Type ?? "errortype null"}: {x.Error?.Detail ?? "null errordetails"} (challenge type {x.Type ?? "null"})"))
 					.ToArray();
 
-				if (challengeExceptions.Length > 0)
-					throw new OrderInvalidException(
+				if (challengeExceptions.Length > 0) 
+                {
+					var exception = new OrderInvalidException(
 						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
 						new AggregateException(challengeExceptions));
+
+                    _logger.LogTrace("Throwing exception: ", exception);
+                    throw exception;
+                }
 			}
 			finally
 			{
