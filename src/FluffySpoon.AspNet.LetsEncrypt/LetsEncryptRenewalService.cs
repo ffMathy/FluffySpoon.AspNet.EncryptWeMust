@@ -276,14 +276,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 					.ToArray();
 
 				if (challengeExceptions.Length > 0) 
-                {
-					var exception = new OrderInvalidException(
+					throw new OrderInvalidException(
 						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
 						new AggregateException(challengeExceptions));
-
-                    _logger.LogTrace("Throwing exception: ", exception);
-                    throw exception;
-                }
+                
 			}
 			finally
 			{
@@ -301,7 +297,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				if (challenges.Any(x => x.Status == ChallengeStatus.Valid) || challenges.All(x => x.Status == ChallengeStatus.Invalid))
 					break;
                 
-                _logger.LogTrace("Still pending or processing..");
                 await Task.Delay(1000);
 				challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
 			}
