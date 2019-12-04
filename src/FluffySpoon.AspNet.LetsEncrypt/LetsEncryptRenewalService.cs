@@ -291,17 +291,18 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 		}
 
-		private static async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
+		private async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
 		{
 			var challenges = await Task.WhenAll(
 								challengeContexts.Select(x => x.Validate()));
 
 			while (true)
 			{
-				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending || x.Status == ChallengeStatus.Processing))
+				if (challenges.Any(x => x.Status == ChallengeStatus.Valid) || challenges.All(x => x.Status == ChallengeStatus.Invalid))
 					break;
-
-				await Task.Delay(1000);
+                
+                _logger.LogTrace("Still pending or processing..");
+                await Task.Delay(1000);
 				challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
 			}
 
