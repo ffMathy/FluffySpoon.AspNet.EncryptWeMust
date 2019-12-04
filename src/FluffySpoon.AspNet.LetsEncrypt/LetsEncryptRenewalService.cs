@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -273,13 +272,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 				var challengeExceptions = nonNullChallengeValidationResponses
 					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception($"{x.Error.Type}: {x.Error.Detail} (challenge type {x.Type})"))
+					.Select(x => new Exception($"{x.Error?.Type ?? "errortype null"}: {x.Error?.Detail ?? "null errordetails"} (challenge type {x.Type ?? "null"})"))
 					.ToArray();
 
-				if (challengeExceptions.Length > 0)
+				if (challengeExceptions.Length > 0) 
 					throw new OrderInvalidException(
 						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
 						new AggregateException(challengeExceptions));
+                
 			}
 			finally
 			{
@@ -287,17 +287,17 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 		}
 
-		private static async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
+		private async Task<Challenge[]> ValidateChallengesAsync(IEnumerable<IChallengeContext> challengeContexts)
 		{
 			var challenges = await Task.WhenAll(
 								challengeContexts.Select(x => x.Validate()));
 
 			while (true)
 			{
-				if (!challenges.Any(x => x.Status == ChallengeStatus.Pending || x.Status == ChallengeStatus.Processing))
+				if (challenges.Any(x => x.Status == ChallengeStatus.Valid) || challenges.All(x => x.Status == ChallengeStatus.Invalid))
 					break;
-
-				await Task.Delay(1000);
+                
+                await Task.Delay(1000);
 				challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
 			}
 
