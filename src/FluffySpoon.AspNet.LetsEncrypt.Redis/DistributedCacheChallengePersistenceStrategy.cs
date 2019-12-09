@@ -29,11 +29,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Redis
 			_expiry = expiry;
 		}
 
-		public bool CanHandleChallengeType(ChallengeType challengeType)
-		{
-			return challengeType == ChallengeType.Http01;
-		}
-
 		public async Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
 		{
 			var persistedChallenges = await RetrieveAsync();

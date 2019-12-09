@@ -64,14 +64,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public static void AddFluffySpoonLetsEncryptChallengePersistence(
 			this IServiceCollection services,
-			IEnumerable<ChallengeType> supportedChallengeTypes,
 			PersistChallengesDelegate persistAsync,
 			RetrieveChallengesDelegate retrieveAsync,
 			DeleteChallengesDelegate deleteAsync)
 		{
 			AddFluffySpoonLetsEncryptChallengePersistence(services,
 				new CustomChallengePersistenceStrategy(
-					supportedChallengeTypes,
 					persistAsync,
 					retrieveAsync,
 					deleteAsync));

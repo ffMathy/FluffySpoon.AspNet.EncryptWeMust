@@ -38,8 +38,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 							{
 								Token = x.Token,
 								Response = x.Response,
-								Type = (int)x.Type,
-								Domains = String.Join(",", x.Domains)
+								Domains = string.Join(",", x.Domains)
 							})),
 				async (databaseContext) => databaseContext
 					.Challenges
@@ -48,7 +47,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 						{
 							Token = x.Token,
 							Response = x.Response,
-							Type = (ChallengeType)x.Type,
 							Domains = x.Domains.Split(',', StringSplitOptions.RemoveEmptyEntries)
 						}),
 				async (databaseContext, challenges) => databaseContext

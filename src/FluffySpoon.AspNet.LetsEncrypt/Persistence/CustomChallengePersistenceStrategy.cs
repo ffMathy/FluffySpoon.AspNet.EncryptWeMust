@@ -12,18 +12,15 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 	public class CustomChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{
-		private readonly IEnumerable<ChallengeType> _supportedChallengeTypes;
 		private readonly PersistChallengesDelegate _persistAsync;
 		private readonly DeleteChallengesDelegate _deleteAsync;
 		private readonly RetrieveChallengesDelegate _retrieveAsync;
 
 		public CustomChallengePersistenceStrategy(
-			IEnumerable<ChallengeType> supportedChallengeTypes,
 			PersistChallengesDelegate persistAsync,
 			RetrieveChallengesDelegate retrieveAsync,
 			DeleteChallengesDelegate deleteAsync)
 		{
-			this._supportedChallengeTypes = supportedChallengeTypes;
 			this._persistAsync = persistAsync;
 			this._deleteAsync = deleteAsync;
 			this._retrieveAsync = retrieveAsync;
@@ -42,11 +39,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		public Task DeleteAsync(IEnumerable<ChallengeDto> challenges)
 		{
 			return _deleteAsync(challenges);
-		}
-
-		public bool CanHandleChallengeType(ChallengeType challengeType)
-		{
-			return _supportedChallengeTypes.Contains(challengeType);
 		}
 	}
 }

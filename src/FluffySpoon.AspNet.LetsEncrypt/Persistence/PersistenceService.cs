@@ -81,10 +81,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			_logger.LogTrace("Persisting challenges through strategies.");
 
 			var tasks = strategies.Select(x =>
-				x.PersistAsync(
-					challenges.Where(y => x.CanHandleChallengeType(y.Type))
-				)
-			);
+				x.PersistAsync(challenges));
 
 			await Task.WhenAll(tasks);
 		}
@@ -143,16 +140,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 			var tasks = strategies.Select(x =>
 				x.DeleteAsync(
-					challenges.Where(y => x.CanHandleChallengeType(y.Type))
-				)
-			);
+					challenges));
 
 			await Task.WhenAll(tasks);
-		}
-
-		public bool HasStrategyForChallengeType(ChallengeType challengeType)
-		{
-			return _challengePersistenceStrategies.Any(x => x.CanHandleChallengeType(challengeType));
 		}
 	}
 }

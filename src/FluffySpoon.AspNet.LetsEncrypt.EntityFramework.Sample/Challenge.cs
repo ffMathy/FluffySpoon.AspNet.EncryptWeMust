@@ -7,7 +7,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 		[Key]
 		public string Token { get; set; }
 		public string Response { get; set; }
-		public int Type { get; set; }
 		public string Domains { get; set; }
 	}
 }

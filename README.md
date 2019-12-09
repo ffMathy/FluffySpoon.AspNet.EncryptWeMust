@@ -225,48 +225,6 @@ services.AddFluffySpoonLetsEncryptAzureAppServiceSslBindingCertificatePersistenc
 
 The resource group for the App Service can also easily be accessed through an environment variable, as specified above.
 
-# DNS challenges & wildcard certificates
-
-By default, challenges are validated over HTTP. This requires that the domain being validated resolves to an operational web server which can respond with the correct token. There are some rare circumstances where this may not be possible. Additionally, this method does not support wildcard certificates.
-
-The use of DNS validation can overcome these issues. The `FluffySpoon.AspNet.LetsEncrypt.Aws` package includes an implementation of DNS challenge support using AWS Route 53.
-
-DNS support is not enabled by default. To enable DNS challenge support, you must register at least one DNS-enabled challenge persistence strategy. The example below shows how to add DNS challenge support using the Route 53 implementation:
-
-```csharp
-services.AddFluffySpoonLetsEncryptAwsRoute53DnsChallengePersistence(
-	new AwsOptions()
-	{
-		Region = ..., // Specify the AWS Region
-		Credentials = new BasicAWSCredentials(...) // Specify some IAM credentials with access to read and write to Route 53
-	});
-```
-
-DNS validation can (and in cases where you're requesting any non-wildcard domains, must) be used in conjunction with HTTP validation - Lets Encrypt will try to use both if possible. It can be used in conjunction with other persistence strategies, including Azure.
-
-Wildcard certificates can be requested by supplying a wildcard domain in the list of domains to include in the certificate order e.g. `*.mydomain.com`.
-
-## Custom DNS persistence
-
-To implement support for other DNS providers, derive from `BaseDnsChallengePersistenceStrategy` and implement the methods `PersistAsync` and `DeleteAsync`, then register it using the `AddFluffySpoonLetsEncryptChallengePersistence` services configuration extension. 
-
-```csharp
-services.AddFluffySpoonLetsEncryptChallengePersistence(
-	(provider) => new MyDnsChallengePersistenceStrategy(...));
-```
-
-### PersistAsync
-
-This method persists a challenge record to DNS. The fully qualified name is supplied in `recordName`, the type of record in `recordType` (this is currently always "TXT"), and the value of the record in `recordValue`. Note that some DNS providers will require that TXT values are enclosed with the `"` double quote character. Your implementation is responsible for applying this if necessary.
-
-If your DNS provider supports it, you should allow for multiple values to be present for any given record. The PersistAsync method should add the value to the existing list of values if the record is already present.
-
-### DeleteAsync
-
-Deletion is requested after validation of the certificate has completed. It is highly recommended to implement the deletion of the specified DNS record value, to avoid accumulation of out-of-date challenge tokens.
-
-If your DNS provider supports it, you should allow for multiple values to be present for any given record. The DeleteAsync method should only remove the specified value from the list of values if there is more than one. If the value is the only one, then the whole record can be deleted.
-
 # Hooking into events
 You can register a an `ICertificateRenewalLifecycleHook` implementation which does something when certain events occur, as shown below. This can be useful if you need to notify a Slack channel or send an e-mail if an error occurs, or when the certificate has indeed been renewed.
 

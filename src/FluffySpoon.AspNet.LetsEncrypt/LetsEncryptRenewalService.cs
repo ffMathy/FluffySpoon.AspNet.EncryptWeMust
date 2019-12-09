@@ -17,8 +17,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
-		private const string WildcardPrefix = "*.";
-
 		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
@@ -157,9 +155,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
 
-			if (domains.Any(x => x.StartsWith(WildcardPrefix)) && !_persistenceService.HasStrategyForChallengeType(ChallengeType.Dns01))
-				throw new InvalidOperationException("A certificate containing a wildcard domain was requested, but no DNS challenge strategies have been registered.");
-
 			var order = await acme.NewOrder(domains);
 			await ValidateOrderAsync(domains, order);
 
@@ -227,17 +222,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			return pfxBytes;
 		}
 
-		private ChallengeType GetChallengeType(string type)
-		{
-			switch (type)
-			{
-				case ChallengeTypes.Dns01: return ChallengeType.Dns01;
-				case ChallengeTypes.Http01: return ChallengeType.Http01;
-			}
-
-			throw new ArgumentException($"Challenge Type {type} not supported.");
-		}
-
 		private async Task ValidateOrderAsync(string[] domains, IOrderContext order)
 		{
 			var allAuthorizations = await order.Authorizations();
@@ -253,11 +237,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			var challengeDtos = nonNullChallengeContexts.Select(x => new ChallengeDto()
 			{
-				Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
+				Token = x.Type == ChallengeTypes.Dns01 ? 
+                    acme.AccountKey.DnsTxt(x.Token) : 
+                    x.Token,
 				Response = x.KeyAuthz,
-				Type = GetChallengeType(x.Type),
 				Domains = domains
 			}).ToArray();
+
 			await _persistenceService.PersistChallengesAsync(challengeDtos);
 
 			try

@@ -16,7 +16,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 			Func<TDbContext, IEnumerable<ChallengeDto>, Task> persistAsync,
 			Func<TDbContext, Task<IEnumerable<ChallengeDto>>> retrieveAsync,
 			Func<TDbContext, IEnumerable<ChallengeDto>, Task> deleteAsync) : base(
-				new ChallengeType[] { ChallengeType.Http01 },
 				async (challenges) =>
 				{
 					using (var scope = serviceProvider.CreateScope())
@@ -33,7 +32,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
 				{
 					using (var scope = serviceProvider.CreateScope())
 					using (var databaseContext = scope.ServiceProvider.GetRequiredService<TDbContext>())
-					using (var transaction = await databaseContext.Database.BeginTransactionAsync())
 					{
 						return await retrieveAsync(databaseContext);
 					}

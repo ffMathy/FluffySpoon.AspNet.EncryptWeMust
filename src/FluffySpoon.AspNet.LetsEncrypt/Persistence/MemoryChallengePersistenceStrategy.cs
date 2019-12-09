@@ -18,15 +18,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		{
 			_challenges = _challenges
 				.Where(x =>
-					!challenges.Any(y => y.Token == x.Token))
+					challenges.All(y => y.Token != x.Token))
 				.ToList();
 
 			return Task.CompletedTask;
-		}
-
-		public bool CanHandleChallengeType(ChallengeType challengeType)
-		{
-			return challengeType == ChallengeType.Http01;
 		}
 
 		public Task PersistAsync(IEnumerable<ChallengeDto> challenges)
