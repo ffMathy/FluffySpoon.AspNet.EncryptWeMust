@@ -6,29 +6,29 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
-	public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
-	{
+    public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
+    {
         private const string MagicPrefix = "/.well-known/acme-challenge/";
 
         private readonly RequestDelegate _next;
-		private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
-		private readonly IPersistenceService _persistenceService;
+        private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
+        private readonly IPersistenceService _persistenceService;
 
-		public LetsEncryptChallengeApprovalMiddleware(
-			RequestDelegate next,
-			ILogger<ILetsEncryptChallengeApprovalMiddleware> logger,
-			IPersistenceService persistenceService)
-		{
-			_next = next;
-			_logger = logger;
-			_persistenceService = persistenceService;
-		}
+        public LetsEncryptChallengeApprovalMiddleware(
+            RequestDelegate next,
+            ILogger<ILetsEncryptChallengeApprovalMiddleware> logger,
+            IPersistenceService persistenceService)
+        {
+            _next = next;
+            _logger = logger;
+            _persistenceService = persistenceService;
+        }
 
         public Task InvokeAsync(HttpContext context)
-		{
+        {
             var path = context.Request.Path;
             if (path.HasValue && path.Value.StartsWith(MagicPrefix))
-			{
+            {
                 return ProcessAcmeChallenge(context);
             }
 
