@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -9,9 +8,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
 	{
-		private readonly RequestDelegate _next;
-		private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
+        private const string MagicPrefix = "/.well-known/acme-challenge/";
 
+        private readonly RequestDelegate _next;
+		private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
 		private readonly IPersistenceService _persistenceService;
 
 		public LetsEncryptChallengeApprovalMiddleware(
@@ -24,33 +24,34 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			_persistenceService = persistenceService;
 		}
 
-		public async Task InvokeAsync(
-			HttpContext context)
+        public Task InvokeAsync(HttpContext context)
 		{
-			var path = context.Request.Path.ToString();
-
-			const string magicPrefix = "/.well-known/acme-challenge/";
-			if (path.StartsWith(magicPrefix))
+            var path = context.Request.Path;
+            if (path.HasValue && path.Value.StartsWith(MagicPrefix))
 			{
-				_logger.LogDebug("Challenge invoked: {challengePath}", path);
+                return ProcessAcmeChallenge(context);
+            }
 
-				var requestedToken = path.Substring(magicPrefix.Length);
+            return _next(context);
+        }
 
-				var allChallenges = await _persistenceService.GetPersistedChallengesAsync();
-				var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
-				if (matchingChallenge == null)
-				{
-					_logger.LogInformation("The given challenge did not match {challengePath} among {allChallenges}", path, allChallenges);
+        private async Task ProcessAcmeChallenge(HttpContext context)
+        {
+            var path = context.Request.Path.ToString();
+            _logger.LogDebug("Challenge invoked: {challengePath}", path);
 
-					await _next(context);
-					return;
-				}
+            var requestedToken = path.Substring(MagicPrefix.Length);
+            var allChallenges = await _persistenceService.GetPersistedChallengesAsync();
+            var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
+            if (matchingChallenge == null)
+            {
+                _logger.LogInformation("The given challenge did not match {challengePath} among {allChallenges}", path, allChallenges);
 
-				await context.Response.WriteAsync(matchingChallenge.Response);
-				return;
-			}
+                await _next(context);
+                return;
+            }
 
-			await _next(context);
-		}
-	}
+            await context.Response.WriteAsync(matchingChallenge.Response);
+        }
+    }
 }
