@@ -228,7 +228,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			var challengeContextTasks = new List<Task<IChallengeContext>>();
 
 			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Http()));
-			challengeContextTasks.AddRange(allAuthorizations.Select(x => x.Dns()));
 
 			var challengeContexts = await Task.WhenAll(challengeContextTasks);
 			var nonNullChallengeContexts = challengeContexts.Where(x => x != null);
