@@ -37,5 +37,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
 		/// </summary>
 		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.LogAndContinue;
-	}
+
+        /// <summary>
+        /// Gets or sets the <see cref="Certes.KeyAlgorithm"/> used to request a new LetsEncrypt certificate.
+        /// </summary>
+        public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.ES256;
+    }
 }
