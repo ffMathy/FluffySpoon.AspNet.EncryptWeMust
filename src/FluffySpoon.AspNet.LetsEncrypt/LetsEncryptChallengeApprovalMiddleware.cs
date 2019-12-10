@@ -49,7 +49,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
                 return;
             }
 
-            await context.Response.WriteAsync(matchingChallenge.Response);
+            // token response is always in ASCII so char count would be equal to byte count here
+            context.Response.ContentLength = matchingChallenge.Response.Length;
+            context.Response.ContentType = "application/octet-stream";
+            await context.Response.WriteAsync(
+                text: matchingChallenge.Response,
+                cancellationToken: context.RequestAborted);
         }
     }
 }
