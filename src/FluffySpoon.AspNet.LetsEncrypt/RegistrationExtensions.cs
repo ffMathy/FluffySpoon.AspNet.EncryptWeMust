@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Logic;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -121,7 +121,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(options);
-			services.AddSingleton<ICertificateRenewal, CertificateRenewal>();
+			services.AddSingleton<ILetsEncryptClient, LetsEncryptClient>();
 			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
 			services.AddTransient<IHostedService, LetsEncryptRenewalService>();
 		}

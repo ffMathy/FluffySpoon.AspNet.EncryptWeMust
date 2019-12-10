@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Logic;
 using Microsoft.Extensions.Logging;
-using static FluffySpoon.AspNet.LetsEncrypt.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.LetsEncrypt.Logic.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
-		private readonly ICertificateRenewal _logic;
+		private readonly ILetsEncryptClient _logic;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly ILogger<ILetsEncryptRenewalService> _logger;
 		private readonly SemaphoreSlim _semaphoreSlim;
@@ -19,7 +20,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		private Timer _timer;
 
 		public LetsEncryptRenewalService(
-			ICertificateRenewal logic,
+			ILetsEncryptClient logic,
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
 			ILogger<ILetsEncryptRenewalService> logger,
 			LetsEncryptOptions options)
@@ -68,10 +69,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var (certificate, status) = await _logic.RenewCertificateIfNeeded(Certificate);
-				Certificate = certificate;
+				var result = await _logic.AttemptCertificateRenewal(Certificate);
+				Certificate = result.Certificate;
 				
-				if (status == Renewed)
+				if (result.Status == Renewed)
 				{
 					foreach (var lifecycleHook in _lifecycleHooks)
 						await lifecycleHook.OnRenewalSucceededAsync();
