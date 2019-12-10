@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using static FluffySpoon.AspNet.LetsEncrypt.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -44,15 +45,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			}
 
 			foreach (var lifecycleHook in _lifecycleHooks)
-			{
 				await lifecycleHook.OnStartAsync();
-			}
 
-			_timer = new Timer(
-				callback: async state => await RunOnceWithErrorHandlingAsync(), 
-				state: null,
-				dueTime: TimeSpan.Zero, 
-				period: TimeSpan.FromHours(1));
+			_timer = new Timer(async state => await RunOnceWithErrorHandlingAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
@@ -73,7 +68,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				Certificate = await _logic.RenewCertificateIfNeeded(Certificate);
+				var (certificate, status) = await _logic.RenewCertificateIfNeeded(Certificate);
+				Certificate = certificate;
+				
+				if (status == Renewed)
+				{
+					foreach (var lifecycleHook in _lifecycleHooks)
+						await lifecycleHook.OnRenewalSucceededAsync();
+				}
 			}
 			catch (Exception ex)
 			{
