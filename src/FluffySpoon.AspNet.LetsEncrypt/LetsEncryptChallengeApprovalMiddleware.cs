@@ -8,7 +8,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
     public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
     {
-        private const string MagicPrefix = "/.well-known/acme-challenge/";
+        private static readonly PathString MagicPrefix = new PathString("/.well-known/acme-challenge/");
 
         private readonly RequestDelegate _next;
         private readonly ILogger<ILetsEncryptChallengeApprovalMiddleware> _logger;
@@ -26,8 +26,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
         public Task InvokeAsync(HttpContext context)
         {
-            var path = context.Request.Path;
-            if (path.HasValue && path.Value.StartsWith(MagicPrefix))
+            if (context.Request.Path.StartsWithSegments(MagicPrefix))
             {
                 return ProcessAcmeChallenge(context);
             }
@@ -40,13 +39,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
             var path = context.Request.Path.ToString();
             _logger.LogDebug("Challenge invoked: {challengePath}", path);
 
-            var requestedToken = path.Substring(MagicPrefix.Length);
+            var requestedToken = path.Substring(MagicPrefix.Value.Length);
             var allChallenges = await _persistenceService.GetPersistedChallengesAsync();
             var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
             if (matchingChallenge == null)
             {
                 _logger.LogInformation("The given challenge did not match {challengePath} among {allChallenges}", path, allChallenges);
-
                 await _next(context);
                 return;
             }
