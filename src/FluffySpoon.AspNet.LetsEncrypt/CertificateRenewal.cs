@@ -33,10 +33,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			_options = options;
 		}
 
-        public Uri LetsEncryptUri => _options.UseStaging
-            ? WellKnownServers.LetsEncryptStagingV2
-            : WellKnownServers.LetsEncryptV2;
-
         public async Task<X509Certificate2> RenewCertificateIfNeeded(X509Certificate2 current)
 		{
 			_logger.LogInformation("Checking to see if in-memory LetsEncrypt certificate needs renewal.");
@@ -125,7 +121,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogDebug("Using existing LetsEncrypt account.");
 
-			_acme = new AcmeContext(LetsEncryptUri, existingAccountKey);
+			_acme = new AcmeContext(_options.LetsEncryptUri, existingAccountKey);
 			
 			await _acme.Account();
 		}
@@ -134,7 +130,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
 
-			_acme = new AcmeContext(LetsEncryptUri);
+			_acme = new AcmeContext(_options.LetsEncryptUri);
 			
 			await _acme.NewAccount(_options.Email, true);
 

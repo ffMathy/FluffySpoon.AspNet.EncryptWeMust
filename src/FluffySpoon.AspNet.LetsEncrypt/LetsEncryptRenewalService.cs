@@ -32,7 +32,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 		public static X509Certificate2 Certificate { get; private set; }
 		
-		public Uri LetsEncryptUri => _logic.LetsEncryptUri;
+		public Uri LetsEncryptUri => _options.LetsEncryptUri;
 		
 		public async Task StartAsync(CancellationToken cancellationToken)
 		{
