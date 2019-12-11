@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Certes;
+using Certes.Acme;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -27,6 +28,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// Recommended while testing - increases your rate limit towards LetsEncrypt. Defaults to false.
 		/// </summary>
 		public bool UseStaging { get; set; }
+		
+		/// <summary>
+		/// Gets the uri which will be used to talk to LetsEncrypt servers.
+		/// </summary>
+		public Uri LetsEncryptUri => UseStaging
+			? WellKnownServers.LetsEncryptStagingV2
+			: WellKnownServers.LetsEncryptV2;
 
 		/// <summary>
 		/// Required. Sent to LetsEncrypt to let them know what details you want in your certificate. Some of the properties are optional.
@@ -37,5 +45,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		/// Gets or sets the renewal fail mode - i.e. what happens if an exception is thrown in the certificate renewal process.
 		/// </summary>
 		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.LogAndContinue;
-	}
+
+        /// <summary>
+        /// Gets or sets the <see cref="Certes.KeyAlgorithm"/> used to request a new LetsEncrypt certificate.
+        /// </summary>
+        public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.ES256;
+    }
 }
