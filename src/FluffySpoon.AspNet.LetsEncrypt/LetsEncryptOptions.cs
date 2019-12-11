@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security;
 using Certes;
 using Certes.Acme;
 
@@ -50,5 +51,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt
         /// Gets or sets the <see cref="Certes.KeyAlgorithm"/> used to request a new LetsEncrypt certificate.
         /// </summary>
         public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.ES256;
-    }
+        
+	}
 }

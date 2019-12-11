@@ -11,7 +11,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
-		private readonly ILetsEncryptClient _logic;
+		private readonly ILetsEncryptFacade _letsEncryptFacade;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly ILogger<ILetsEncryptRenewalService> _logger;
 		private readonly SemaphoreSlim _semaphoreSlim;
@@ -20,12 +20,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		private Timer _timer;
 
 		public LetsEncryptRenewalService(
-			ILetsEncryptClient logic,
+			ILetsEncryptFacade letsEncryptFacade,
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
 			ILogger<ILetsEncryptRenewalService> logger,
 			LetsEncryptOptions options)
 		{
-			_logic = logic;
+			_letsEncryptFacade = letsEncryptFacade;
 			_lifecycleHooks = lifecycleHooks;
 			_logger = logger;
 			_options = options;
@@ -69,7 +69,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var result = await _logic.AttemptCertificateRenewal(Certificate);
+				var result = await _letsEncryptFacade.AttemptCertificateRenewal(Certificate);
 				Certificate = result.Certificate;
 				
 				if (result.Status == Renewed)

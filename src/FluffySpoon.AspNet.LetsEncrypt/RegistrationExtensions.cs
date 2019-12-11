@@ -121,7 +121,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		{
 			services.AddFluffySpoonLetsEncryptPersistenceService();
 			services.AddSingleton(options);
+			services.AddSingleton<IAcmeAuthenticator, AcmeAuthenticator>();
 			services.AddSingleton<ILetsEncryptClient, LetsEncryptClient>();
+			services.AddSingleton<ILetsEncryptFacade, LetsEncryptFacade>();
 			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
 			services.AddTransient<IHostedService, LetsEncryptRenewalService>();
 		}

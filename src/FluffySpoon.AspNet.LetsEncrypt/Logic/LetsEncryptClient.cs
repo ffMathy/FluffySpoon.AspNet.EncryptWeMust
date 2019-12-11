@@ -1,220 +1,110 @@
 using System;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
 using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging;
-using static FluffySpoon.AspNet.LetsEncrypt.Logic.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 {
-	public class LetsEncryptClient : ILetsEncryptClient
-	{
-		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
+    public class LetsEncryptClient : ILetsEncryptClient
+    {
+        public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
-		private readonly IPersistenceService _persistenceService;
-		private readonly ILogger<ILetsEncryptClient> _logger;
-		private readonly LetsEncryptOptions _options;
+        private readonly ILogger<ILetsEncryptFacade> _logger;
+        private readonly LetsEncryptOptions _options;
 
-		private IAcmeContext _acme;
-
-		public LetsEncryptClient(
-			LetsEncryptOptions options,
-			IPersistenceService persistenceService,
-			ILogger<ILetsEncryptClient> logger)
-		{
-			_persistenceService = persistenceService;
-			_logger = logger;
-			_options = options;
-		}
-
-        public async Task<CertificateRenewalResult> AttemptCertificateRenewal(X509Certificate2 current)
-		{
-			_logger.LogInformation("Checking to see if in-memory LetsEncrypt certificate needs renewal.");
-
-			if (IsCertificateValid(current))
-			{
-				_logger.LogInformation("Current in-memory LetsEncrypt certificate is valid.");
-				return new CertificateRenewalResult(current, Unchanged);
-			}
-
-			_logger.LogInformation("Checking to see if existing LetsEncrypt certificate has been persisted and is valid.");
-
-			var persistedSiteCertificate = await _persistenceService.GetPersistedSiteCertificateAsync();
-			if (IsCertificateValid(persistedSiteCertificate))
-			{
-				_logger.LogInformation("A persisted non-expired LetsEncrypt certificate was found and will be used.");
-				return new CertificateRenewalResult(persistedSiteCertificate, LoadedFromStore);
-			}
-
-			_logger.LogInformation("A persisted but expired LetsEncrypt certificate was found and will be renewed.");
-
-			await AuthenticateAsync();
-
-			var domains = _options.Domains?.ToArray() ?? Array.Empty<string>();
-			var newCertificate = await AcquireNewCertificateForDomains(domains);
-			return new CertificateRenewalResult(newCertificate, Renewed);
-		}
-
-        private bool IsCertificateValid(X509Certificate2 certificate)
+        public LetsEncryptClient(LetsEncryptOptions options, ILogger<ILetsEncryptFacade> logger)
         {
-	        try
-	        {
-		        if (certificate == null)
-			        return false;
-		        else if (_options.TimeUntilExpiryBeforeRenewal != null && certificate.NotAfter - DateTime.Now < _options.TimeUntilExpiryBeforeRenewal)
-			        return false;
-		        else if (_options.TimeAfterIssueDateBeforeRenewal != null && DateTime.Now - certificate.NotBefore > _options.TimeAfterIssueDateBeforeRenewal)
-			        return false;
-		        else if (certificate.NotBefore > DateTime.Now || certificate.NotAfter < DateTime.Now)
-			        return false;
-		        else
-			        return true;
-	        }
-	        catch (CryptographicException exc)
-	        {
-		        _logger.LogError(exc, "Exception occured during certificate validation");
-		        return false;
-	        }
+            _logger = logger;
+            _options = options;
         }
 
-        private async Task<X509Certificate2> AcquireNewCertificateForDomains(string[] domains)
-		{
-			_logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
+        public async Task<PlacedOrder> PlaceOrder(string[] domains, IAcmeContext acme)
+        {
+            _logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
+            var order = await acme.NewOrder(domains);
+            var allAuthorizations = await order.Authorizations();
+            var challengeContexts = await Task.WhenAll(allAuthorizations.Select(x => x.Http()));
+            var nonNullChallengeContexts = challengeContexts.Where(x => x != null).ToArray();
+            
+            var dtos = nonNullChallengeContexts.Select(x => new ChallengeDto
+            {
+                Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
+                Response = x.KeyAuthz,
+                Domains = domains
+            }).ToArray();
+            
+            return new PlacedOrder(dtos, order, nonNullChallengeContexts);
+        }
 
-			var order = await _acme.NewOrder(domains);
-			await ValidateOrderAsync(domains, order);
+        public async Task<PfxCertificateBytes> ValidateOrder(PlacedOrder placedOrder)
+        {
+            await ValidateChallenges(placedOrder.Challenges);
+            var bytes = await AcquireCertificateBytesFromOrderAsync(placedOrder.Order);
+            return new PfxCertificateBytes(bytes);
+        }
 
-			var certificateBytes = await AcquireCertificateBytesFromOrderAsync(order);
-			if (certificateBytes == null)
-			{
-				throw new InvalidOperationException("The certificate from the order was null.");
-			}
+        private async Task ValidateChallenges(IChallengeContext[] challengeContexts)
+        {
+            _logger.LogInformation("Validating all pending order authorizations.");
 
-			await _persistenceService.PersistSiteCertificateAsync(certificateBytes);
+            var challengeValidationResponses = await ValidateChallengesAsync(challengeContexts);
+            var nonNullChallengeValidationResponses = challengeValidationResponses.Where(x => x != null).ToArray();
 
-			return new X509Certificate2(certificateBytes, nameof(FluffySpoon));
-		}
+            if (challengeValidationResponses.Length > nonNullChallengeValidationResponses.Length)
+                _logger.LogWarning("Some challenge responses were null.");
+						   
+            var challengeExceptions = nonNullChallengeValidationResponses
+                .Where(x => x.Status == ChallengeStatus.Invalid)
+                .Select(x => new Exception($"{x.Error?.Type ?? "errortype null"}: {x.Error?.Detail ?? "null errordetails"} (challenge type {x.Type ?? "null"})"))
+                .ToArray();
 
-		private async Task AuthenticateAsync()
-		{
-			if (_acme != null)
-				return;
+            if (challengeExceptions.Length > 0) 
+                throw new OrderInvalidException(
+                    "One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
+                    new AggregateException(challengeExceptions));
+        }
 
-			var existingAccountKey = await _persistenceService.GetPersistedAccountCertificateAsync();
-			if (existingAccountKey != null)
-			{
-				await UseExistingLetsEncryptAccount(existingAccountKey);
-			}
-			else
-			{
-				await CreateNewLetsEncryptAccount();
-			}
-		}
+        private async Task<byte[]> AcquireCertificateBytesFromOrderAsync(IOrderContext order)
+        {
+            _logger.LogInformation("Acquiring certificate through signing request.");
 
-		private async Task UseExistingLetsEncryptAccount(IKey existingAccountKey)
-		{
-			_logger.LogDebug("Using existing LetsEncrypt account.");
-
-			_acme = new AcmeContext(_options.LetsEncryptUri, existingAccountKey);
-			
-			await _acme.Account();
-		}
-
-		private async Task CreateNewLetsEncryptAccount()
-		{
-			_logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
-
-			_acme = new AcmeContext(_options.LetsEncryptUri);
-			
-			await _acme.NewAccount(_options.Email, true);
-
-			await _persistenceService.PersistAccountCertificateAsync(_acme.AccountKey);
-		}
-
-		private async Task<byte[]> AcquireCertificateBytesFromOrderAsync(IOrderContext order)
-		{
-			_logger.LogInformation("Acquiring certificate through signing request.");
-
-			var keyPair = KeyFactory.NewKey(_options.KeyAlgorithm);
+            var keyPair = KeyFactory.NewKey(_options.KeyAlgorithm);
 			
             var certificateChain = await order.Generate(_options.CertificateSigningRequest, keyPair);
 
-			var pfxBuilder = certificateChain.ToPfx(keyPair);
+            var pfxBuilder = certificateChain.ToPfx(keyPair);
 			
             pfxBuilder.FullChain = true;
 
-			var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, nameof(FluffySpoon));
+            var pfxBytes = pfxBuilder.Build(CertificateFriendlyName, nameof(FluffySpoon));
 
-			_logger.LogInformation("Certificate acquired.");
+            _logger.LogInformation("Certificate acquired.");
 
-			return pfxBytes;
-		}
+            return pfxBytes;
+        }
 
-		private async Task ValidateOrderAsync(string[] domains, IOrderContext order)
-		{
-			var allAuthorizations = await order.Authorizations();
-            var challengeContexts = await Task.WhenAll(allAuthorizations.Select(x => x.Http()));
-			var nonNullChallengeContexts = challengeContexts.Where(x => x != null).ToArray();
+        private static async Task<Challenge[]> ValidateChallengesAsync(IChallengeContext[] challengeContexts)
+        {
+            var challenges = await Task.WhenAll(challengeContexts.Select(x => x.Validate()));
 
-			_logger.LogInformation("Validating all pending order authorizations.");
-
-			var challengeDtos = nonNullChallengeContexts.Select(x => new ChallengeDto
-			{
-				Token = x.Type == ChallengeTypes.Dns01 ? _acme.AccountKey.DnsTxt(x.Token) : x.Token,
-				Response = x.KeyAuthz,
-				Domains = domains
-			}).ToArray();
-
-			await _persistenceService.PersistChallengesAsync(challengeDtos);
-
-			try
-			{
-				var challengeValidationResponses = await ValidateChallengesAsync(nonNullChallengeContexts);
-				var nonNullChallengeValidationResponses = challengeValidationResponses.Where(x => x != null).ToArray();
-
-				if (challengeValidationResponses.Length > nonNullChallengeValidationResponses.Length)
-					_logger.LogWarning("Some challenge responses were null.");
-							   
-				var challengeExceptions = nonNullChallengeValidationResponses
-					.Where(x => x.Status == ChallengeStatus.Invalid)
-					.Select(x => new Exception($"{x.Error?.Type ?? "errortype null"}: {x.Error?.Detail ?? "null errordetails"} (challenge type {x.Type ?? "null"})"))
-					.ToArray();
-
-				if (challengeExceptions.Length > 0) 
-					throw new OrderInvalidException(
-						"One or more LetsEncrypt orders were invalid. Make sure that LetsEncrypt can contact the domain you are trying to request an SSL certificate for, in order to verify it.",
-						new AggregateException(challengeExceptions));
-			}
-			finally
-			{
-				await _persistenceService.DeleteChallengesAsync(challengeDtos);
-			}
-		}
-
-		private static async Task<Challenge[]> ValidateChallengesAsync(IChallengeContext[] challengeContexts)
-		{
-			var challenges = await Task.WhenAll(challengeContexts.Select(x => x.Validate()));
-
-			while (true)
-			{
-				var anyValid = challenges.Any(x => x.Status == ChallengeStatus.Valid);
-				var allInvalid = challenges.All(x => x.Status == ChallengeStatus.Invalid);
+            while (true)
+            {
+                var anyValid = challenges.Any(x => x.Status == ChallengeStatus.Valid);
+                var allInvalid = challenges.All(x => x.Status == ChallengeStatus.Invalid);
 				
-				if (anyValid || allInvalid)
-					break;
+                if (anyValid || allInvalid)
+                    break;
                 
                 await Task.Delay(1000);
-				challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
-			}
+                challenges = await Task.WhenAll(challengeContexts.Select(x => x.Resource()));
+            }
 
-			return challenges;
-		}
-	}
+            return challenges;
+        }
+    }
 }
