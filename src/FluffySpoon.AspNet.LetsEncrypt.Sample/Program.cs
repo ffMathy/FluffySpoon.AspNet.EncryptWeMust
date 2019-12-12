@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore;
+﻿﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -24,8 +24,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 					});
 				})
 				.UseUrls(
-					"http://" + DomainToUse + ":4000",
-					"https://" + DomainToUse + ":4001")
+					"http://" + DomainToUse,
+					"https://" + DomainToUse)
 				.UseStartup<Startup>();
 	}
 }
