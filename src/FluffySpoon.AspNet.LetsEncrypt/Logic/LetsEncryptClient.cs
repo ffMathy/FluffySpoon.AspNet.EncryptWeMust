@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
@@ -19,6 +18,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 		public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
 		private readonly IPersistenceService _persistenceService;
+		private readonly ICertificateValidator _certificateValidator;
 		private readonly ILogger<ILetsEncryptClient> _logger;
 		private readonly LetsEncryptOptions _options;
 
@@ -27,9 +27,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 		public LetsEncryptClient(
 			LetsEncryptOptions options,
 			IPersistenceService persistenceService,
+			ICertificateValidator certificateValidator,
 			ILogger<ILetsEncryptClient> logger)
 		{
 			_persistenceService = persistenceService;
+			_certificateValidator = certificateValidator;
 			_logger = logger;
 			_options = options;
 		}
@@ -38,7 +40,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 		{
 			_logger.LogInformation("Checking to see if in-memory LetsEncrypt certificate needs renewal.");
 
-			if (IsCertificateValid(current))
+			if (_certificateValidator.IsCertificateValid(current))
 			{
 				_logger.LogInformation("Current in-memory LetsEncrypt certificate is valid.");
 				return new CertificateRenewalResult(current, Unchanged);
@@ -47,7 +49,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 			_logger.LogInformation("Checking to see if existing LetsEncrypt certificate has been persisted and is valid.");
 
 			var persistedSiteCertificate = await _persistenceService.GetPersistedSiteCertificateAsync();
-			if (IsCertificateValid(persistedSiteCertificate))
+			if (_certificateValidator.IsCertificateValid(persistedSiteCertificate))
 			{
 				_logger.LogInformation("A persisted non-expired LetsEncrypt certificate was found and will be used.");
 				return new CertificateRenewalResult(persistedSiteCertificate, LoadedFromStore);
@@ -61,28 +63,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 			var newCertificate = await AcquireNewCertificateForDomains(domains);
 			return new CertificateRenewalResult(newCertificate, Renewed);
 		}
-
-        private bool IsCertificateValid(X509Certificate2 certificate)
-        {
-	        try
-	        {
-		        if (certificate == null)
-			        return false;
-		        else if (_options.TimeUntilExpiryBeforeRenewal != null && certificate.NotAfter - DateTime.Now < _options.TimeUntilExpiryBeforeRenewal)
-			        return false;
-		        else if (_options.TimeAfterIssueDateBeforeRenewal != null && DateTime.Now - certificate.NotBefore > _options.TimeAfterIssueDateBeforeRenewal)
-			        return false;
-		        else if (certificate.NotBefore > DateTime.Now || certificate.NotAfter < DateTime.Now)
-			        return false;
-		        else
-			        return true;
-	        }
-	        catch (CryptographicException exc)
-	        {
-		        _logger.LogError(exc, "Exception occured during certificate validation");
-		        return false;
-	        }
-        }
 
         private async Task<X509Certificate2> AcquireNewCertificateForDomains(string[] domains)
 		{
