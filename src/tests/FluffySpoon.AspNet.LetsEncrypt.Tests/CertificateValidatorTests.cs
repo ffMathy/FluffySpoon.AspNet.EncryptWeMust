@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using FluffySpoon.AspNet.LetsEncrypt.Logic;
@@ -34,7 +32,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 },
                 new NullLogger<CertificateValidator>());
 
-            var cert = MakeCert(from, to);
+            var cert = SelfSignedCertificate.Make(from, to);
 
             certificateValidator.IsCertificateValid(cert).Should().Be(expected);
         }
@@ -87,14 +85,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             {
                 return new object[]  { certStart,  certEnd,  timeUntilExpiryBeforeRenewal,  timeAfterIssueDateBeforeRenewal,  isValid };
             }
-        }
-
-        private static X509Certificate2 MakeCert(DateTime from, DateTime to)
-        {
-            var ecdsa = ECDsa.Create(); // generate asymmetric key pair
-            var req = new CertificateRequest("cn=foobar", ecdsa, HashAlgorithmName.SHA256);
-            var cert = req.CreateSelfSigned(@from, to);
-            return cert;
         }
     }
 }

@@ -5,6 +5,7 @@ using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
 using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
+using FluffySpoon.AspNet.LetsEncrypt.Logic.Models;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging;
 
@@ -12,34 +13,36 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 {
     public interface ILetsEncryptClient
     {
-        Task<PlacedOrder> PlaceOrder(string[] domains, IAcmeContext acme);
-        Task<PfxCertificateBytes> FinalizeOrder(PlacedOrder placedOrder);
+        Task<PlacedOrder> PlaceOrder(string[] domains);
+        Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder);
     }
     
     public class LetsEncryptClient : ILetsEncryptClient
     {
-        public const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
+        private const string CertificateFriendlyName = "FluffySpoonAspNetLetsEncryptCertificate";
 
-        private readonly ILogger<ICertificateProvider> _logger;
+        private readonly ILogger _logger;
+        private readonly IAcmeContext _acme;
         private readonly LetsEncryptOptions _options;
 
-        public LetsEncryptClient(LetsEncryptOptions options, ILogger<ICertificateProvider> logger)
+        public LetsEncryptClient(IAcmeContext acme, LetsEncryptOptions options, ILogger logger)
         {
             _logger = logger;
+            _acme = acme;
             _options = options;
         }
 
-        public async Task<PlacedOrder> PlaceOrder(string[] domains, IAcmeContext acme)
+        public async Task<PlacedOrder> PlaceOrder(string[] domains)
         {
             _logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
-            var order = await acme.NewOrder(domains);
+            var order = await _acme.NewOrder(domains);
             var allAuthorizations = await order.Authorizations();
             var challengeContexts = await Task.WhenAll(allAuthorizations.Select(x => x.Http()));
             var nonNullChallengeContexts = challengeContexts.Where(x => x != null).ToArray();
             
             var dtos = nonNullChallengeContexts.Select(x => new ChallengeDto
             {
-                Token = x.Type == ChallengeTypes.Dns01 ? acme.AccountKey.DnsTxt(x.Token) : x.Token,
+                Token = x.Type == ChallengeTypes.Dns01 ? _acme.AccountKey.DnsTxt(x.Token) : x.Token,
                 Response = x.KeyAuthz,
                 Domains = domains
             }).ToArray();
@@ -47,11 +50,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
             return new PlacedOrder(dtos, order, nonNullChallengeContexts);
         }
 
-        public async Task<PfxCertificateBytes> FinalizeOrder(PlacedOrder placedOrder)
+        public async Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder)
         {
-            await ValidateChallenges(placedOrder.Challenges);
+            await ValidateChallenges(placedOrder.ChallengeContexts);
             var bytes = await AcquireCertificateBytesFromOrderAsync(placedOrder.Order);
-            return new PfxCertificateBytes(bytes);
+            return new PfxCertificate(bytes);
         }
 
         private async Task ValidateChallenges(IChallengeContext[] challengeContexts)

@@ -1,6 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Logic.Models
 {
     public class CertificateRenewalResult
     {

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Logic;
 using Microsoft.Extensions.Logging;
-using static FluffySpoon.AspNet.LetsEncrypt.Logic.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -69,7 +69,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var result = await _certificateProvider.GetCertificate(Certificate);
+				var result = await _certificateProvider.RenewCertificateIfNeeded(Certificate);
 				Certificate = result.Certificate;
 				
 				if (result.Status == Renewed)

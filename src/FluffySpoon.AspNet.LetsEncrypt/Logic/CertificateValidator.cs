@@ -29,19 +29,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Logic
             {
                 if (certificate == null)
                     return false;
-                else
-                {
-                    var now = DateTime.Now;
+                
+                var now = DateTime.Now;
                     
-                    if (_options.TimeUntilExpiryBeforeRenewal != null && certificate.NotAfter - now < _options.TimeUntilExpiryBeforeRenewal)
-                        return false;
-                    else if (_options.TimeAfterIssueDateBeforeRenewal != null && now - certificate.NotBefore > _options.TimeAfterIssueDateBeforeRenewal)
-                        return false;
-                    else if (certificate.NotBefore > now || certificate.NotAfter < now)
-                        return false;
-                    else
-                        return true;
-                }
+                if (_options.TimeUntilExpiryBeforeRenewal != null && certificate.NotAfter - now < _options.TimeUntilExpiryBeforeRenewal)
+                    return false;
+                
+                if (_options.TimeAfterIssueDateBeforeRenewal != null && now - certificate.NotBefore > _options.TimeAfterIssueDateBeforeRenewal)
+                    return false;
+                
+                if (certificate.NotBefore > now || certificate.NotAfter < now)
+                    return false;
+                
+                return true;
             }
             catch (CryptographicException exc)
             {
