@@ -24,8 +24,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 					});
 				})
 				.UseUrls(
-					"http://" + DomainToUse,
-					"https://" + DomainToUse)
+					"http://" + DomainToUse + ":4000",
+					"https://" + DomainToUse + ":4001")
 				.UseStartup<Startup>();
 	}
 }

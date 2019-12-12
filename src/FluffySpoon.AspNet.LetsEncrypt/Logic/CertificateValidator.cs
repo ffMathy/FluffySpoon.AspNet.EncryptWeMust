@@ -5,6 +5,11 @@ using Microsoft.Extensions.Logging;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Logic
 {
+    public interface ICertificateValidator
+    {
+        bool IsCertificateValid(X509Certificate2 certificate);
+    }
+    
     public class CertificateValidator : ICertificateValidator
     {
         private readonly LetsEncryptOptions _options;
