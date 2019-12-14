@@ -1,18 +1,17 @@
 using System;
 using Certes;
-using FluentAssertions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Tests
 {
+    [TestClass]
     public class ResolutionTests
     {
-        [Fact]
+        [TestMethod]
         public void Go()
         {
             var thing = WebHost.CreateDefaultBuilder()

@@ -10,21 +10,23 @@ using FluffySpoon.AspNet.LetsEncrypt.Logic.Models;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Xunit;
 using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Tests
 {
+    [TestClass]
     public class LetsEncryptClientTests
     {
-        private Mock<IPersistenceService> PersistenceService { get; }
-        private Mock<ICertificateValidator> CertificateValidator { get; }
-        private Mock<ILetsEncryptClientFactory> LetsEncryptClientFactory { get; }
-        private Mock<ILetsEncryptClient> LetsEncryptClient { get; }
-        private CertificateProvider Sut { get; }
+        private Mock<IPersistenceService> PersistenceService;
+        private Mock<ICertificateValidator> CertificateValidator;
+        private Mock<ILetsEncryptClientFactory> LetsEncryptClientFactory;
+        private Mock<ILetsEncryptClient> LetsEncryptClient;
+        private CertificateProvider Sut;
         
-        public LetsEncryptClientTests()
+        [TestInitialize]
+        public void Initialize()
         {
             var persistenceService = new Mock<IPersistenceService>(MockBehavior.Strict);
             
@@ -69,7 +71,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             DateTime.Now.Subtract(180.Days()),
             DateTime.Now.Subtract(90.Days()));
 
-        [Fact]
+        [TestMethod]
         public async Task Should_TolerateNullInput()
         {
             PersistenceService
@@ -79,10 +81,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             var output = await Sut.RenewCertificateIfNeeded(null);
 
             output.Status.Should().Be(LoadedFromStore);
-            Assert.Same(ValidCert, output.Certificate);
+            Assert.AreSame(ValidCert, output.Certificate);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task OnValidMemoryCertificate_ShouldNotAttemptRenewal()
         {
             var input = ValidCert;
@@ -92,7 +94,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             ReferenceEquals(input, output.Certificate).Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task OnValidPersistedCertificate_ShouldNotAttemptRenewal()
         {
             var input = InvalidCert;
@@ -103,10 +105,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             var output = await Sut.RenewCertificateIfNeeded(input);
 
             output.Status.Should().Be(LoadedFromStore);
-            Assert.Same(stored, output.Certificate);
+            Assert.AreSame(stored, output.Certificate);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task OnNoValidCertificateAvailable_ShouldRenewCertificate()
         {
             PersistenceService

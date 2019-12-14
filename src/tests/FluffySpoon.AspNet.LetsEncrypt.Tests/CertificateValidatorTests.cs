@@ -4,13 +4,14 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using FluffySpoon.AspNet.LetsEncrypt.Logic;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Tests
 {
+    [TestClass]
     public class CertificateValidatorTests
     {
-        [Fact]
+        [TestMethod]
         public void OnNullCert_ShouldReturnFalse()
         {
             var certificateValidator = new CertificateValidator(
@@ -20,24 +21,60 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             certificateValidator.IsCertificateValid(null).Should().BeFalse();
         } 
         
-        [Theory]
-        [MemberData(nameof(ValidateCertificateDate))]
-        public void ValidateCertificateTests(DateTime from, DateTime to, TimeSpan? a, TimeSpan? b, bool expected)
+        [TestMethod]
+        [DynamicData(nameof(ValidateCertificateDate), DynamicDataSourceType.Method)]
+        public void ValidateCertificateTests(CertificateDates cd, ValidatorSettings vs, bool expected)
         {
             var certificateValidator = new CertificateValidator(
                 new LetsEncryptOptions
                 {
-                    TimeUntilExpiryBeforeRenewal = a,
-                    TimeAfterIssueDateBeforeRenewal = b
+                    TimeUntilExpiryBeforeRenewal = vs.TimeUntilExpiryBeforeRenewal,
+                    TimeAfterIssueDateBeforeRenewal = vs.TimeAfterIssueDateBeforeRenewal
                 },
                 new NullLogger<CertificateValidator>());
 
-            var cert = SelfSignedCertificate.Make(from, to);
+            var cert = SelfSignedCertificate.Make(cd.From, cd.To);
 
             certificateValidator.IsCertificateValid(cert).Should().Be(expected);
         }
+        
+        public struct CertificateDates
+        {
+            public CertificateDates(DateTime from, DateTime to)
+            {
+                From = from;
+                To = to;
+            }
 
-        public static IEnumerable<object[]> ValidateCertificateDate()
+            public DateTime From;
+            public DateTime To;
+
+            public override string ToString()
+            {
+                return $"CertificateDates: [{From:d}-{To:d}]";
+            }
+        }
+
+        public struct ValidatorSettings
+        {
+            public ValidatorSettings(TimeSpan? timeUntilExpiryBeforeRenewal, TimeSpan? timeAfterIssueDateBeforeRenewal)
+            {
+                TimeUntilExpiryBeforeRenewal = timeUntilExpiryBeforeRenewal;
+                TimeAfterIssueDateBeforeRenewal = timeAfterIssueDateBeforeRenewal;
+            }
+            
+            public TimeSpan? TimeUntilExpiryBeforeRenewal;
+            public TimeSpan? TimeAfterIssueDateBeforeRenewal;
+
+            public override string ToString()
+            {
+                string Show(TimeSpan? ts) => ts == null ? "Never" : ts.Value.ToString("g");
+                
+                return $"ValidatorSettings: ({Show(TimeUntilExpiryBeforeRenewal)}, {Show(TimeAfterIssueDateBeforeRenewal)})";
+            }
+        }
+        
+        private static IEnumerable<object[]> ValidateCertificateDate()
         {
             // fresh certificate
             yield return Make(
@@ -81,9 +118,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 TimeSpan.FromDays(30), 
                 false); 
             
-            object[] Make(DateTime certStart, DateTime certEnd, TimeSpan? timeUntilExpiryBeforeRenewal, TimeSpan? timeAfterIssueDateBeforeRenewal, bool isValid)
+            object[] Make(
+                DateTime certStart,
+                DateTime certEnd,
+                TimeSpan? timeUntilExpiryBeforeRenewal,
+                TimeSpan? timeAfterIssueDateBeforeRenewal,
+                bool isValid)
             {
-                return new object[]  { certStart,  certEnd,  timeUntilExpiryBeforeRenewal,  timeAfterIssueDateBeforeRenewal,  isValid };
+                return new object[]
+                {
+                    new CertificateDates(certStart,  certEnd),  
+                    new ValidatorSettings(timeUntilExpiryBeforeRenewal,  timeAfterIssueDateBeforeRenewal),
+                    isValid
+                };
             }
         }
     }
