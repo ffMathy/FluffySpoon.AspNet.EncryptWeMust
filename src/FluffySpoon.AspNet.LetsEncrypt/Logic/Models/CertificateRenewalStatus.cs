@@ -1,4 +1,4 @@
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Logic.Models
 {
     public enum CertificateRenewalStatus
     {

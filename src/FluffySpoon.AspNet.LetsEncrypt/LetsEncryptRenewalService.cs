@@ -5,13 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Logic;
 using Microsoft.Extensions.Logging;
-using static FluffySpoon.AspNet.LetsEncrypt.Logic.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{
-		private readonly ILetsEncryptClient _logic;
+		private readonly ICertificateProvider _certificateProvider;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly ILogger<ILetsEncryptRenewalService> _logger;
 		private readonly SemaphoreSlim _semaphoreSlim;
@@ -20,12 +20,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 		private Timer _timer;
 
 		public LetsEncryptRenewalService(
-			ILetsEncryptClient logic,
+			ICertificateProvider certificateProvider,
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
 			ILogger<ILetsEncryptRenewalService> logger,
 			LetsEncryptOptions options)
 		{
-			_logic = logic;
+			_certificateProvider = certificateProvider;
 			_lifecycleHooks = lifecycleHooks;
 			_logger = logger;
 			_options = options;
@@ -69,7 +69,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 
 			try
 			{
-				var result = await _logic.AttemptCertificateRenewal(Certificate);
+				var result = await _certificateProvider.RenewCertificateIfNeeded(Certificate);
 				Certificate = result.Certificate;
 				
 				if (result.Status == Renewed)

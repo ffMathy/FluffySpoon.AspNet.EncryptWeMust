@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt", "FluffySpoon.AspNet.LetsEncrypt\FluffySpoon.AspNet.LetsEncrypt.csproj", "{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E8077EB1-F6DB-43C3-B145-15B24B56219F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluffySpoon.AspNet.LetsEncrypt.Tests", "tests\FluffySpoon.AspNet.LetsEncrypt.Tests\FluffySpoon.AspNet.LetsEncrypt.Tests.csproj", "{2AA982EF-0E57-44FF-9A67-CBEE19F1970C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,11 +49,18 @@ Global
 		{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AA982EF-0E57-44FF-9A67-CBEE19F1970C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AA982EF-0E57-44FF-9A67-CBEE19F1970C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AA982EF-0E57-44FF-9A67-CBEE19F1970C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AA982EF-0E57-44FF-9A67-CBEE19F1970C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15A18112-3424-456F-B929-2F178384A39A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2AA982EF-0E57-44FF-9A67-CBEE19F1970C} = {E8077EB1-F6DB-43C3-B145-15B24B56219F}
 	EndGlobalSection
 EndGlobal
