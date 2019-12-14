@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
@@ -11,7 +12,7 @@ using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+using NSubstitute;
 using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Tests
@@ -19,16 +20,17 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
     [TestClass]
     public class LetsEncryptClientTests
     {
-        private Mock<IPersistenceService> PersistenceService;
-        private Mock<ICertificateValidator> CertificateValidator;
-        private Mock<ILetsEncryptClientFactory> LetsEncryptClientFactory;
-        private Mock<ILetsEncryptClient> LetsEncryptClient;
+        private IPersistenceService PersistenceService;
+        private ICertificateValidator CertificateValidator;
+        private ILetsEncryptClientFactory LetsEncryptClientFactory;
+        private ILetsEncryptClient LetsEncryptClient;
+        
         private CertificateProvider Sut;
         
         [TestInitialize]
         public void Initialize()
         {
-            var persistenceService = new Mock<IPersistenceService>(MockBehavior.Strict);
+            var persistenceService = Substitute.For<IPersistenceService>();
             
             var options = new LetsEncryptOptions
             {
@@ -38,21 +40,22 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 UseStaging = true,
             };
 
-            var certificateValidator = new Mock<ICertificateValidator>(MockBehavior.Strict);
+            var certificateValidator = Substitute.For<ICertificateValidator>();
             
-            certificateValidator.Setup(it => it.IsCertificateValid(null)).Returns(false);
-            certificateValidator.Setup(it => it.IsCertificateValid(RefEq(InvalidCert))).Returns(false);
-            certificateValidator.Setup(it => it.IsCertificateValid(RefEq(ValidCert))).Returns(true);
-            
-            var client = new Mock<ILetsEncryptClient>(MockBehavior.Strict);
-            var factory = new Mock<ILetsEncryptClientFactory>(MockBehavior.Strict);
-            factory.Setup(it => it.GetClient()).ReturnsAsync(client.Object);
+            certificateValidator.IsCertificateValid(null).Returns(false);
+            certificateValidator.IsCertificateValid(RefEq(InvalidCert)).Returns(false);
+            certificateValidator.IsCertificateValid(RefEq(ValidCert)).Returns(true);
+
+            var client = Substitute.For<ILetsEncryptClient>();
+            var factory = Substitute.For<ILetsEncryptClientFactory>();
+
+            factory.GetClient().Returns(Task.FromResult(client));
 
             var sut = new CertificateProvider(
                 options,
-                certificateValidator.Object,
-                persistenceService.Object,
-                factory.Object,
+                certificateValidator,
+                persistenceService,
+                factory,
                 NullLogger<CertificateProvider>.Instance);
            
             PersistenceService = persistenceService;
@@ -74,9 +77,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
         [TestMethod]
         public async Task Should_TolerateNullInput()
         {
-            PersistenceService
-                .Setup(x => x.GetPersistedSiteCertificateAsync())
-                .ReturnsAsync(ValidCert);
+            PersistenceService.GetPersistedSiteCertificateAsync()
+                .Returns(Task.FromResult(ValidCert));
             
             var output = await Sut.RenewCertificateIfNeeded(null);
 
@@ -100,7 +102,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             var input = InvalidCert;
             var stored = ValidCert; 
             
-            PersistenceService.Setup(x => x.GetPersistedSiteCertificateAsync()).ReturnsAsync(stored);
+            PersistenceService.GetPersistedSiteCertificateAsync().Returns(Task.FromResult(stored));
             
             var output = await Sut.RenewCertificateIfNeeded(input);
 
@@ -111,49 +113,45 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
         [TestMethod]
         public async Task OnNoValidCertificateAvailable_ShouldRenewCertificate()
         {
-            PersistenceService
-                .Setup(x => x.GetPersistedSiteCertificateAsync())
-                .ReturnsAsync(InvalidCert);
+            // arrange
+            
+            PersistenceService.GetPersistedSiteCertificateAsync().Returns(Task.FromResult(InvalidCert));
 
             var dtos = new []{ new ChallengeDto { Domains = new[] {"test.com"},  Token = "ping",  Response = "pong" } };
-            var placedOrder = new PlacedOrder(dtos, new Mock<IOrderContext>().Object, Array.Empty<IChallengeContext>());
-            
-            LetsEncryptClient
-                .Setup(x => x.PlaceOrder(new[] {"test.com"}))
-                .ReturnsAsync(placedOrder);
+            var placedOrder = new PlacedOrder(dtos, Substitute.For<IOrderContext>(), Array.Empty<IChallengeContext>());
 
-            PersistenceService
-                .Setup(x => x.PersistChallengesAsync(dtos))
-                .Returns(Task.CompletedTask);
-            
-            PersistenceService
-                .Setup(x => x.DeleteChallengesAsync(dtos))
-                .Returns(Task.CompletedTask);
+            LetsEncryptClient.PlaceOrder(SeqEq(new[] {"test.com"})).Returns(Task.FromResult(placedOrder));
+            PersistenceService.PersistChallengesAsync(dtos).Returns(Task.CompletedTask);
+            PersistenceService.DeleteChallengesAsync(dtos).Returns(Task.CompletedTask);
 
-            var newCertBytes = SelfSignedCertificate
-                .Make(DateTime.Now, DateTime.Now.AddDays(90))
-                .RawData;
+            var newCertBytes = SelfSignedCertificate.Make(DateTime.Now, DateTime.Now.AddDays(90)).RawData;
             
-            LetsEncryptClient
-                .Setup(x => x.FinalizeOrder(placedOrder))
-                .ReturnsAsync(new PfxCertificate(newCertBytes));
+            LetsEncryptClient.FinalizeOrder(placedOrder).Returns(Task.FromResult(new PfxCertificate(newCertBytes)));
 
-            PersistenceService
-                .Setup(x => x.PersistSiteCertificateAsync(newCertBytes))
-                .Returns(Task.CompletedTask);
+            PersistenceService.PersistSiteCertificateAsync(newCertBytes).Returns(Task.CompletedTask);
+            
+            // act
             
             var output = await Sut.RenewCertificateIfNeeded(current: null);
             
+            // assert
+            
             output.Status.Should().Be(Renewed);
             output.Certificate.RawData.Should().BeEquivalentTo(newCertBytes);
-            
-            PersistenceService.VerifyAll();
-            LetsEncryptClient.VerifyAll();
-            LetsEncryptClientFactory.VerifyAll();
-            CertificateValidator.Verify(x => x.IsCertificateValid(null));
-            CertificateValidator.Verify(x => x.IsCertificateValid(InvalidCert));
+
+            CertificateValidator.Received(1).IsCertificateValid(null);
+            await PersistenceService.Received(1).GetPersistedSiteCertificateAsync();
+            CertificateValidator.Received(1).IsCertificateValid(InvalidCert);
+            await LetsEncryptClient.Received(1).PlaceOrder(SeqEq(new[] {"test.com"}));
+            await PersistenceService.Received(1).PersistChallengesAsync(dtos);
+            await PersistenceService.Received(1).DeleteChallengesAsync(dtos);
+            await PersistenceService.Received(1).PersistSiteCertificateAsync(newCertBytes);
+            await PersistenceService.Received(1).PersistChallengesAsync(dtos);
+            await LetsEncryptClient.Received(1).FinalizeOrder(placedOrder);
+            await LetsEncryptClientFactory.Received(1).GetClient();
         }
-        
-        private static T RefEq<T>(T it) => It.Is<T>(x => ReferenceEquals(x, it));
+
+        private static T[] SeqEq<T>(T[] xs) => Arg.Is<T[]>(ys => xs.SequenceEqual(ys)); 
+        private static T RefEq<T>(T it) => Arg.Is<T>(x => ReferenceEquals(x, it));
     }
 }
