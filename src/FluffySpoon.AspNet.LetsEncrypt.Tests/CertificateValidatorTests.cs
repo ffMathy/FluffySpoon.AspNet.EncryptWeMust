@@ -13,7 +13,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
     public class CertificateValidatorTests
     {
         [TestMethod]
-        public void OnNullCert_ShouldReturnFalse()
+        public void IsCertificateValid_OnNullCert_ShouldReturnFalse()
         {
             var certificateValidator = new CertificateValidator(
                 new LetsEncryptOptions(),
