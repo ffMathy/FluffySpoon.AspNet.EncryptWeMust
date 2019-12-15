@@ -1,5 +1,4 @@
-﻿using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence

@@ -1,4 +1,5 @@
 ﻿using System;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;

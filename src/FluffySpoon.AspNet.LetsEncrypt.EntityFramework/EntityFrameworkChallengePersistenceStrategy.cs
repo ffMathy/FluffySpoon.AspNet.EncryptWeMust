@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

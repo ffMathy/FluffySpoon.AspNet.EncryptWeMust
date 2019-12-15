@@ -2,23 +2,21 @@ using System;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Logic.Models;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
 {
-    public interface ICertificateProvider
-    {
-        Task<CertificateRenewalResult> RenewCertificateIfNeeded(X509Certificate2 current = null);
-    }
-    
+
     public class CertificateProvider : ICertificateProvider
     {
         private readonly IPersistenceService _persistenceService;
         private readonly ILetsEncryptClientFactory _clientFactory;
         private readonly ICertificateValidator _certificateValidator;
+
         private readonly ILogger<CertificateProvider> _logger;
+
         private readonly string[] _domains;
 
         public CertificateProvider(

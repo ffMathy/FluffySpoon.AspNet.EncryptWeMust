@@ -1,6 +1,5 @@
 ﻿using FluffySpoon.AspNet.LetsEncrypt.EntityFramework;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;

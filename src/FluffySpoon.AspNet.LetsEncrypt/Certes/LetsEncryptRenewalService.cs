@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Logic;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using Microsoft.Extensions.Logging;
-using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.LetsEncrypt.Certificates.CertificateRenewalStatus;
 
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 {
 	public class LetsEncryptRenewalService : ILetsEncryptRenewalService
 	{

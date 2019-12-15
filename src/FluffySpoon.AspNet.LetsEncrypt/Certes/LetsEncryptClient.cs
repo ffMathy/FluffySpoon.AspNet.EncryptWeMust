@@ -5,11 +5,10 @@ using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
 using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
-using FluffySpoon.AspNet.LetsEncrypt.Logic.Models;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 {
     public interface ILetsEncryptClient
     {

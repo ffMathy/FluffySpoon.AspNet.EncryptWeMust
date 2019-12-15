@@ -6,14 +6,13 @@ using Certes;
 using Certes.Acme;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using FluffySpoon.AspNet.LetsEncrypt.Logic;
-using FluffySpoon.AspNet.LetsEncrypt.Logic.Models;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
-using static FluffySpoon.AspNet.LetsEncrypt.Logic.Models.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.LetsEncrypt.Certificates.CertificateRenewalStatus;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Tests
 {

@@ -3,7 +3,7 @@ using Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 {
     public interface ILetsEncryptClientFactory
     {

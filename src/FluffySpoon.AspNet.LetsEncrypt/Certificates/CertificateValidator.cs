@@ -1,9 +1,10 @@
 using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Logic
+namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
 {
     public interface ICertificateValidator
     {

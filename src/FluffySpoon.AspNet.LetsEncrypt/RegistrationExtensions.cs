@@ -5,7 +5,8 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Logic;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {

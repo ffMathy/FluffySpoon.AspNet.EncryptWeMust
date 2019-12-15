@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {

@@ -4,7 +4,7 @@ using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 {
     public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
     {

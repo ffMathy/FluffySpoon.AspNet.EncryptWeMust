@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using FluffySpoon.AspNet.LetsEncrypt.Logic;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

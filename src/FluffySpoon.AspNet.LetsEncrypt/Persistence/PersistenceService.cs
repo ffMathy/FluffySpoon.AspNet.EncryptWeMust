@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
