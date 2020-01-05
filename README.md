@@ -27,7 +27,7 @@ _Note that you can set either `TimeUntilExpiryBeforeRenewal`, `TimeAfterIssueDat
 
 ```csharp
 //the following line adds the automatic renewal service.
-services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 {
 	Email = "some-email@github.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
 	UseStaging = false, //switch to true for testing
@@ -57,20 +57,8 @@ Inject the middleware in the `Startup` class' `Configure` method as such:
 ```csharp
 public void Configure()
 {
-	app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+	app.UseFluffySpoonLetsEncrypt();
 }
-```
-
-## Configure Kestrel to look for the certificate
-Finally, to make Kestrel automatically select the LetsEncrypt certificate, we must configure it as such. Here's an example `Program.cs`:
-
-```csharp
-WebHost.CreateDefaultBuilder(args)
-	.UseKestrel(kestrelOptions => kestrelOptions.ConfigureHttpsDefaults(
-			httpsOptions => httpsOptions.ServerCertificateSelector = 
-				(c, s) => LetsEncryptRenewalService.Certificate))
-	.UseUrls("http://" + DomainToUse, "https://" + DomainToUse)
-	.UseStartup<Startup>();
 ```
 
 Tada! Your application now supports SSL via LetsEncrypt, even from the first HTTPS request. It will even renew your certificate automatically in the background.

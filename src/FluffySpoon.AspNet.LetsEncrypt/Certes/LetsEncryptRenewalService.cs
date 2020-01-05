@@ -32,7 +32,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			_semaphoreSlim = new SemaphoreSlim(1);
 		}
 
-		public static X509Certificate2 Certificate { get; private set; }
+		internal static X509Certificate2 Certificate { get; private set; }
 		
 		public Uri LetsEncryptUri => _options.LetsEncryptUri;
 		

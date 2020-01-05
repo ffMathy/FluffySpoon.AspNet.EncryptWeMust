@@ -19,7 +19,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 .ConfigureLogging(options => options.AddConsole())
                 .ConfigureServices(services =>
                 {
-                    services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+                    services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
                     {
                         Email = "some-email@github.com",
                         UseStaging = true,
@@ -38,7 +38,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                     services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
                     services.AddFluffySpoonLetsEncryptFileChallengePersistence();
                 })
-                .Configure(appBuilder => { appBuilder.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware(); })
+                .Configure(appBuilder => { appBuilder.UseFluffySpoonLetsEncrypt(); })
                 .Build();
 
             thing.Services.GetRequiredService<ILetsEncryptRenewalService>();

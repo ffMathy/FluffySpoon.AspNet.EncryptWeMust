@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Options;
 
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
@@ -116,12 +118,16 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 				new MemoryCertificatePersistenceStrategy());
 		}
 
-		public static void AddFluffySpoonLetsEncryptRenewalService(
+		public static void AddFluffySpoonLetsEncrypt(
 		  this IServiceCollection services,
 		  LetsEncryptOptions options)
 		{
+            services.AddTransient<IConfigureOptions<KestrelServerOptions>, KestrelOptionsSetup>();
+
 			services.AddFluffySpoonLetsEncryptPersistenceService();
+
 			services.AddSingleton(options);
+
 			services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();
 			services.AddSingleton<ICertificateValidator, CertificateValidator>();
 			services.AddSingleton<ICertificateProvider, CertificateProvider>();
@@ -129,7 +135,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddTransient<IHostedService, LetsEncryptRenewalService>();
 		}
 
-		public static void UseFluffySpoonLetsEncryptChallengeApprovalMiddleware(
+		public static void UseFluffySpoonLetsEncrypt(
 			this IApplicationBuilder app)
 		{
 			app.UseMiddleware<LetsEncryptChallengeApprovalMiddleware>();

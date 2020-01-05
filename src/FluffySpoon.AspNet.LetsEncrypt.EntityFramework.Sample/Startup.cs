@@ -58,7 +58,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 							.Where(x => challenges.Any(y => y.Token == x.Token))
 						));
 
-			services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+			services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 			{
 				Email = "some-email@github.com",
 				UseStaging = true,
@@ -86,7 +86,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+			app.UseFluffySpoonLetsEncrypt();
 
 			app.Run(async (context) =>
 			{

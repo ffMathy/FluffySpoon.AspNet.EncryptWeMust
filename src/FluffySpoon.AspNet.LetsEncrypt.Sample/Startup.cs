@@ -14,7 +14,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+			services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
 			{
 				Email = "some-email@github.com",
 				UseStaging = true,
@@ -42,7 +42,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Sample
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+			app.UseFluffySpoonLetsEncrypt();
 
 			app.Run(async (context) =>
 			{

@@ -20,7 +20,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 	{
 		private const string DnsChallengeNameFormat = "_acme-challenge.{0}";
 		private const string WildcardRegex = "^\\*\\.";
-		private const string TxtRecordType = "TXT";
 
 		private readonly IEnumerable<ICertificatePersistenceStrategy> _certificatePersistenceStrategies;
 		private readonly IEnumerable<IChallengePersistenceStrategy> _challengePersistenceStrategies;
