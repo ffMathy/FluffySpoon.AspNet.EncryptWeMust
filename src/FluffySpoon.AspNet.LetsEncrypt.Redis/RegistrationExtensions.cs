@@ -1,9 +1,10 @@
-﻿using FluffySpoon.AspNet.LetsEncrypt.Redis;
+﻿using System;
+using FluffySpoon.AspNet.LetsEncrypt.DistributedCache;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 
+// ReSharper disable once CheckNamespace
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions

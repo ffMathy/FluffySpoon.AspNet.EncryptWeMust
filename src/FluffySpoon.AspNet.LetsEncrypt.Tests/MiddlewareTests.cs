@@ -39,7 +39,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             _webHostBuilder = WebHost.CreateDefaultBuilder()
                 .ConfigureServices(services =>
                 {
-                    services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+                    services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
                     {
                         Email = "some-email@github.com",
                         UseStaging = true,
@@ -66,7 +66,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 {
                     app.UseDeveloperExceptionPage();
                     
-                    app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+                    app.UseFluffySpoonLetsEncrypt();
                     
                     app.Run(async context =>
                     {
@@ -74,14 +74,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                         await context.Response.WriteAsync("Not found");
                     });
                 })
-                .UseKestrel(kestrelOptions =>
-                {
-                    kestrelOptions.ConfigureHttpsDefaults(httpsOptions =>
-                    {
-                        httpsOptions.ServerCertificateSelector =
-                            (c, s) => LetsEncryptRenewalService.Certificate;
-                    });
-                })
+                .UseKestrel()
                 .ConfigureLogging(l => l.AddConsole(x => x.IncludeScopes = true));
         }
 

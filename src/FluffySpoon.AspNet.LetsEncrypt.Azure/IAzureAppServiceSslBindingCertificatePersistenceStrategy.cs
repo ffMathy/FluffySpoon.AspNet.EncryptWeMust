@@ -1,7 +1,7 @@
-﻿using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 
-namespace FluffySpoon.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 {
 	public interface IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{

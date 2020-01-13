@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 
-namespace FluffySpoon.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 {
 	public class AzureOptions
 	{

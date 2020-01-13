@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Redis
+namespace FluffySpoon.AspNet.LetsEncrypt.DistributedCache
 {
 	public class DistributedCacheCertificatePersistenceStrategy : CustomCertificatePersistenceStrategy
 	{

@@ -10,6 +10,10 @@ using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Options;
 
+using System.Runtime.CompilerServices;
+[assembly:InternalsVisibleTo("FluffySpoon.AspNet.LetsEncrypt.Tests")]
+
+// ReSharper disable once CheckNamespace
 namespace FluffySpoon.AspNet.LetsEncrypt
 {
 	public static class RegistrationExtensions

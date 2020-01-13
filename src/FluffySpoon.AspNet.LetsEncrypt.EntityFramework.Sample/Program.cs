@@ -17,13 +17,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
 			WebHost.CreateDefaultBuilder(args)
 				.ConfigureLogging(l => l.AddConsole(x => x.IncludeScopes = true))
-				.UseKestrel(kestrelOptions =>
-				{
-					kestrelOptions.ConfigureHttpsDefaults(httpsOptions =>
-					{
-						httpsOptions.ServerCertificateSelector = (c, s) => LetsEncryptRenewalService.Certificate;
-					});
-				})
+				.UseKestrel()
 				.UseUrls(
 					"http://" + DomainToUse,
 					"https://" + DomainToUse)

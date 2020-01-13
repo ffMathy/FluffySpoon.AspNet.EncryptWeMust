@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Redis
+namespace FluffySpoon.AspNet.LetsEncrypt.DistributedCache
 {
 	public class DistributedCacheChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{

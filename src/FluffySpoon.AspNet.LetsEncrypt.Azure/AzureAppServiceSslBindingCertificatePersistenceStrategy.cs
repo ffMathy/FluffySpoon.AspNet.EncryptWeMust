@@ -1,21 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 {
-	using System.Collections.Generic;
-	using System.IO;
-	using System.Linq;
-	using System.Security.Cryptography.X509Certificates;
-	using System.Text.RegularExpressions;
-	using System.Threading.Tasks;
-	using FluffySpoon.AspNet.LetsEncrypt;
-	using Microsoft.Azure.Management.AppService.Fluent;
-	using Microsoft.Extensions.Logging;
-	using Azure = Microsoft.Azure.Management.Fluent.Azure;
+    using Azure = Microsoft.Azure.Management.Fluent.Azure;
 
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
