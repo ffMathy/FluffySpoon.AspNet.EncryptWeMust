@@ -61,6 +61,18 @@ public void Configure()
 }
 ```
 
+## Set default bindings
+Call UseUrls with http://* and https://* in Program.cs
+```csharp
+ public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseUrls(new string[] { "http://*", "https://*" });
+                    webBuilder.UseStartup<Startup>();
+                });
+```
+
 Tada! Your application now supports SSL via LetsEncrypt, even from the first HTTPS request. It will even renew your certificate automatically in the background.
 
 # Optional: Configuring persistence
