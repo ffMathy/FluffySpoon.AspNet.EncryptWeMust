@@ -96,13 +96,13 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			try
 			{
 				await RunOnceAsync();
-				_timer?.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
+				_timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
 			}
 			catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled)
 			{
 				_logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
 				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry)
-					_timer?.Change(Timeout.InfiniteTimeSpan, TimeSpan.FromMinutes(1));
+					_timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 			}
 		}
 
