@@ -135,14 +135,32 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();
 			services.AddSingleton<ICertificateValidator, CertificateValidator>();
 			services.AddSingleton<ICertificateProvider, CertificateProvider>();
-			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
-			services.AddTransient<IHostedService, LetsEncryptRenewalService>();
+
+			//services.AddHostedService<LetsEncryptRenewalService>(); 
+			// Not using AddHostedService so we can retrieve it as a service instead, but it's still a hosted service.
+			services.AddSingleton<LetsEncryptRenewalService>();
+			services.AddSingleton<IHostedService>(p => p.GetService<LetsEncryptRenewalService>());
 		}
 
 		public static void UseFluffySpoonLetsEncrypt(
 			this IApplicationBuilder app)
 		{
 			app.UseMiddleware<LetsEncryptChallengeApprovalMiddleware>();
+
+			LetsEncryptRenewalService letsEncryptRenewalService = app.ApplicationServices.GetRequiredService<LetsEncryptRenewalService>();
+			letsEncryptRenewalService.RunNowDelayed();
+		}
+
+		/// <summary>
+		/// A call to RunFluffySpoonLetsEncrypt will initiate renewing/requesting a LetsEncrypt cert.
+		/// </summary>
+		/// <remarks>This can only be used if the LetsEncryptOptions.StartUpMode property is set to StartUpMode.Manual.
+		/// This should be called as the last item in the Configure method of the Startup class.</remarks>
+		public static void RunFluffySpoonLetsEncrypt(
+			this IApplicationBuilder app, int delayMS = 0) {
+
+			LetsEncryptRenewalService letsEncryptRenewalService = app.ApplicationServices.GetRequiredService<LetsEncryptRenewalService>();
+			letsEncryptRenewalService.RunNowManual(delayMS);
 		}
 	}
 }

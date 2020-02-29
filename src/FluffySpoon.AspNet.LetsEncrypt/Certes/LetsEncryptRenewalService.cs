@@ -48,7 +48,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
-			_timer = new Timer(async state => await RunOnceWithErrorHandlingAsync(), null, TimeSpan.Zero, TimeSpan.FromHours(1));
+			TimeSpan ts = _options.StartUpMode == StartUpMode.Immediate ? TimeSpan.Zero : Timeout.InfiniteTimeSpan;
+			_timer = new Timer(async state => await RunOnceWithErrorHandlingAsync(), null, ts, TimeSpan.FromHours(1));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
@@ -93,17 +94,26 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 
 		private async Task RunOnceWithErrorHandlingAsync()
 		{
-			try
-			{
+			try {
 				await RunOnceAsync();
 				_timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
-			}
-			catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled)
-			{
+			} catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled) {
 				_logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
-				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry)
+				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry) {
 					_timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+				}
 			}
+		}
+
+		internal void RunNowManual(int delayMS = 0) {
+			if (_options.StartUpMode != StartUpMode.Manual)
+				throw new InvalidOperationException($"{nameof(RunNowManual)} can only be called when the {nameof(LetsEncryptOptions)}.{nameof(LetsEncryptOptions.StartUpMode)} property is set to {nameof(StartUpMode.Manual)}.");
+			_timer?.Change(TimeSpan.FromMilliseconds(delayMS), TimeSpan.FromHours(1));
+		}
+
+		internal void RunNowDelayed(int delayMS = 0) {
+			if (_options.StartUpMode == StartUpMode.Delayed)
+				_timer?.Change(TimeSpan.FromMilliseconds(delayMS), TimeSpan.FromHours(1));
 		}
 
 		public void Dispose()
