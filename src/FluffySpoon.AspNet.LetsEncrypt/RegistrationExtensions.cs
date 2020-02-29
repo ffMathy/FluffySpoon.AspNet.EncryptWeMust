@@ -136,7 +136,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt
 			services.AddSingleton<ICertificateValidator, CertificateValidator>();
 			services.AddSingleton<ICertificateProvider, CertificateProvider>();
 
-			services.AddHostedService<LetsEncryptRenewalService>(); 
+			services.AddTransient<ILetsEncryptRenewalService, LetsEncryptRenewalService>();
+			services.AddTransient<IHostedService, LetsEncryptRenewalService>();			
 		}
 
 		public static void UseFluffySpoonLetsEncrypt(
