@@ -47,11 +47,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		public RenewalFailMode RenewalFailMode { get; set; } = RenewalFailMode.LogAndContinue;
 
 		/// <summary>
-		/// Gets or sets the startup mode which defines at which point during startup a new LetsEncrypt certificate is requested.
-		/// </summary>
-		public StartUpMode StartUpMode { get; set; } = StartUpMode.Immediate;
-		
-		/// <summary>
 		/// Gets or sets the <see cref="Certes.KeyAlgorithm"/> used to request a new LetsEncrypt certificate.
 		/// </summary>
 		public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.ES256;
