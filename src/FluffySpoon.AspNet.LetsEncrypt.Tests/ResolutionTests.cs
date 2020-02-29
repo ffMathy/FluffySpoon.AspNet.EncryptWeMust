@@ -41,7 +41,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
                 .Configure(appBuilder => { appBuilder.UseFluffySpoonLetsEncrypt(); })
                 .Build();
 
-            thing.Services.GetRequiredService<ILetsEncryptRenewalService>();
+            thing.Services.GetRequiredService<LetsEncryptRenewalService>();
         }
     }
 }
