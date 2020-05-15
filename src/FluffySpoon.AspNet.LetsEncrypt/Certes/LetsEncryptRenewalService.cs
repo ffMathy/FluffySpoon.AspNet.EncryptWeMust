@@ -20,6 +20,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		private readonly LetsEncryptOptions _options;
 
 		private Timer _timer;
+		private X509Chain _chain;
 
 		public LetsEncryptRenewalService(
 			ICertificateProvider certificateProvider,
@@ -76,7 +77,34 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			try
 			{
 				var result = await _certificateProvider.RenewCertificateIfNeeded(Certificate);
+				
+				var chain = new X509Chain
+				{
+					ChainPolicy =
+					{
+						VerificationFlags = X509VerificationFlags.AllFlags,
+						RevocationFlag = X509RevocationFlag.ExcludeRoot,
+						RevocationMode = X509RevocationMode.NoCheck
+					}
+				};
+            
+				if (chain.Build(result.Certificate))
+				{
+					_logger.LogInformation("Successfully built certificate chain");
+
+					var oldChain = Interlocked.Exchange(ref _chain, chain);
+					oldChain?.Dispose();
+				}
+				else
+				{
+					// todo: wording
+					// todo: throw?
+					_logger.LogWarning("Was not able to build certificate chain");
+					chain.Dispose();
+				}
+				
 				Certificate = result.Certificate;
+				// todo: dispose old cert?
 				
 				if (result.Status == Renewed)
 				{
@@ -117,6 +145,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 
 		public void Dispose()
 		{
+			_chain?.Dispose();
 			_timer?.Dispose();
 		}
 	}
