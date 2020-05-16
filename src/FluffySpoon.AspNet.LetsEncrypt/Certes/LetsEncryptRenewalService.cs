@@ -76,6 +76,28 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			try
 			{
 				var result = await _certificateProvider.RenewCertificateIfNeeded(Certificate);
+
+				if (result.Status != Unchanged)
+				{
+					// Preload intermediate certs before exposing certificate to the Kestrel
+					using var chain = new X509Chain
+					{
+						ChainPolicy =
+						{
+							RevocationMode = X509RevocationMode.NoCheck
+						}
+					};
+
+					if (chain.Build(result.Certificate))
+					{
+						_logger.LogInformation("Successfully built certificate chain");
+					}
+					else
+					{
+						_logger.LogWarning("Was not able to build certificate chain. This can cause an outage of your app.");
+					}
+				}
+
 				Certificate = result.Certificate;
 				
 				if (result.Status == Renewed)
