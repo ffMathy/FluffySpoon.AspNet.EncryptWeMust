@@ -4,7 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using static FluffySpoon.AspNet.LetsEncrypt.Certificates.CertificateRenewalStatus;
 
@@ -15,7 +15,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		private readonly ICertificateProvider _certificateProvider;
 		private readonly IEnumerable<ICertificateRenewalLifecycleHook> _lifecycleHooks;
 		private readonly ILogger<ILetsEncryptRenewalService> _logger;
-		private readonly IApplicationLifetime _lifetime;
+		private readonly IHostApplicationLifetime _lifetime;
 		private readonly SemaphoreSlim _semaphoreSlim;
 		private readonly LetsEncryptOptions _options;
 
@@ -24,7 +24,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		public LetsEncryptRenewalService(
 			ICertificateProvider certificateProvider,
 			IEnumerable<ICertificateRenewalLifecycleHook> lifecycleHooks,
-			IApplicationLifetime lifetime,
+			IHostApplicationLifetime lifetime,
 			ILogger<ILetsEncryptRenewalService> logger,
 			LetsEncryptOptions options)
 		{
@@ -49,12 +49,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 					" which means that the LetsEncrypt certificate will never renew.");
 			}
 
-			_lifetime.ApplicationStarted.Register(() => OnApplicationStarted(cancellationToken));
-
 			foreach (var lifecycleHook in _lifecycleHooks)
 				await lifecycleHook.OnStartAsync();
 
 			_timer = new Timer(async state => await RunOnceWithErrorHandlingAsync(), null, Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
+			
+			_lifetime.ApplicationStarted.Register(() => OnApplicationStarted(cancellationToken));
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken)
