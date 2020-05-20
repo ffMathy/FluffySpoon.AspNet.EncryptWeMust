@@ -134,7 +134,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 
 		private void OnApplicationStarted(CancellationToken t) {
 			_logger.LogInformation("Application started");
-			_timer?.Change(TimeSpan.Zero, TimeSpan.FromHours(1));
+			_timer?.Change(_options.RenewalServiceStartupDelay, TimeSpan.FromHours(1));
 		}
 
 		public void Dispose()
