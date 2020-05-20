@@ -32,6 +32,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
                     return false;
                 
                 var now = DateTime.Now;
+
+                _logger.LogTrace("Validating cert UntilExpiry {UntilExpiry}, AfterIssue {AfterIssue} - {Certificate}",
+                    _options.TimeUntilExpiryBeforeRenewal, _options.TimeAfterIssueDateBeforeRenewal, certificate);
                     
                 if (_options.TimeUntilExpiryBeforeRenewal != null && certificate.NotAfter - now < _options.TimeUntilExpiryBeforeRenewal)
                     return false;

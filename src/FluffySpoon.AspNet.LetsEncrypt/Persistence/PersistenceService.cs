@@ -51,6 +51,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task PersistChallengesAsync(ChallengeDto[] challenges)
 		{
+			_logger.LogTrace("Using ({Strategies}) for persisting challenge", (object) _challengePersistenceStrategies);
 			await PersistChallengesAsync(challenges, _challengePersistenceStrategies);
 		}
 
@@ -67,8 +68,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return dnsName;
 		}
 
-		private async Task PersistCertificateAsync(CertificateType persistenceType, byte[] bytes, IEnumerable<ICertificatePersistenceStrategy> strategies) {
-			_logger.LogTrace("Persisting {0} through strategies.", persistenceType);
+		private async Task PersistCertificateAsync(CertificateType persistenceType, byte[] bytes, IEnumerable<ICertificatePersistenceStrategy> strategies) 
+		{
+			_logger.LogTrace("Persisting {type} certificate through strategies", persistenceType);
 
 			var tasks = strategies.Select(x => x.PersistAsync(persistenceType, bytes ?? new byte[0]));
 			await Task.WhenAll(tasks);
@@ -76,7 +78,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		private async Task PersistChallengesAsync(IEnumerable<ChallengeDto> challenges, IEnumerable<IChallengePersistenceStrategy> strategies)
 		{
-			_logger.LogTrace("Persisting challenges through strategies.");
+			_logger.LogTrace("Persisting challenges ({challenges}) through strategies.", challenges);
+
+			if (!strategies.Any())
+			{
+				_logger.LogWarning("There are no challenges persistence strategies - challenges will not be stored");
+			}
 
 			var tasks = strategies.Select(x =>
 				x.PersistAsync(challenges));
@@ -111,11 +118,19 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		private async Task<IEnumerable<ChallengeDto>> GetPersistedChallengesAsync(IEnumerable<IChallengePersistenceStrategy> strategies)
 		{
-			_logger.LogTrace("Persisting challenges through strategies.");
-
 			var result = new List<ChallengeDto>();
 			foreach (var strategy in strategies)
 				result.AddRange(await strategy.RetrieveAsync());
+
+			if (!result.Any())
+			{
+				_logger.LogWarning("There are no persisted challenges from strategies {strategies}",
+					string.Join(",", strategies));
+			}
+			else
+			{
+				_logger.LogTrace("Retrieved challenges {challenges} from persistence strategies", result);
+			}
 
 			return result;
 		}
@@ -129,12 +144,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 					return bytes;
 			}
 
+			_logger.LogTrace("Did not find certificate of type {type} with strategies {strategies}.", persistenceType, string.Join(",", strategies));
+
 			return null;
 		}
 
 		private async Task DeleteChallengesAsync(IEnumerable<ChallengeDto> challenges, IEnumerable<IChallengePersistenceStrategy> strategies)
 		{
-			_logger.LogTrace("Deleting challenges through strategies.");
+			_logger.LogTrace("Deleting challenges {challenges} through strategies.", challenges);
 
 			var tasks = strategies.Select(x =>
 				x.DeleteAsync(

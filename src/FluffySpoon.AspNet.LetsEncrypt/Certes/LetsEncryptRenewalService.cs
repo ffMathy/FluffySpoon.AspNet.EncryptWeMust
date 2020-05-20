@@ -49,6 +49,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 					" which means that the LetsEncrypt certificate will never renew.");
 			}
 
+			_logger.LogTrace("LetsEncryptRenewalService StartAsync");
+
 			_lifetime.ApplicationStarted.Register(() => OnApplicationStarted(cancellationToken));
 
 			foreach (var lifecycleHook in _lifecycleHooks)
@@ -122,10 +124,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		private async Task RunOnceWithErrorHandlingAsync()
 		{
 			try {
+				_logger.LogTrace("LetsEncryptRenewalService - timer callback starting");
 				await RunOnceAsync();
 				_timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
 			} catch (Exception e) when (_options.RenewalFailMode != RenewalFailMode.Unhandled) {
-				_logger.LogWarning(e, $"Exception occured renewing certificates: '{e.Message}.'");
+				_logger.LogWarning(e, "Exception occurred renewing certificates: '{Message}'", e.Message);
 				if (_options.RenewalFailMode == RenewalFailMode.LogAndRetry) {
 					_timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 				}
@@ -133,7 +136,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 		}
 
 		private void OnApplicationStarted(CancellationToken t) {
-			_logger.LogInformation("Application started");
+			_logger.LogInformation("LetsEncryptRenewalService - Application started");
 			_timer?.Change(TimeSpan.Zero, TimeSpan.FromHours(1));
 		}
 
