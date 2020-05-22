@@ -39,7 +39,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
         private async Task ProcessAcmeChallenge(HttpContext context)
         {
             var path = context.Request.Path.ToString();
-            _logger.LogDebug("Challenge invoked: {challengePath}", path);
+            _logger.LogDebug("Challenge invoked: {challengePath} by {IpAddress}", path, context.Connection.RemoteIpAddress);
 
             var requestedToken = path.Substring($"{MagicPrefix}/".Length);
             var allChallenges = await _persistenceService.GetPersistedChallengesAsync();

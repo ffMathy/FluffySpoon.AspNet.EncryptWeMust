@@ -33,9 +33,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 
         public async Task<PlacedOrder> PlaceOrder(string[] domains)
         {
-            _logger.LogInformation("Ordering LetsEncrypt certificate for domains {0}.", new object[] { domains });
+            _logger.LogInformation("Ordering LetsEncrypt certificate for domains {Domains}.", (object)domains);
             var order = await _acme.NewOrder(domains);
+
             var allAuthorizations = await order.Authorizations();
+
             var challengeContexts = await Task.WhenAll(allAuthorizations.Select(x => x.Http()));
             var nonNullChallengeContexts = challengeContexts.Where(x => x != null).ToArray();
             
@@ -45,6 +47,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
                 Response = x.KeyAuthz,
                 Domains = domains
             }).ToArray();
+            
+            _logger.LogTrace("LetsEncrypt placed order for domains {Domains} with challenges {Challenges}", domains, dtos);
             
             return new PlacedOrder(dtos, order, nonNullChallengeContexts);
         }
