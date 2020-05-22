@@ -51,7 +51,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
             }
             else
             {
-                _logger.LogDebug("Creating LetsEncrypt account with email {0}.", _options.Email);
+                _logger.LogDebug("Creating LetsEncrypt account with email {EmailAddress}.", _options.Email);
                 var acme = new AcmeContext(_options.LetsEncryptUri);
                 await acme.NewAccount(_options.Email, true);
                 await _persistenceService.PersistAccountCertificateAsync(acme.AccountKey);

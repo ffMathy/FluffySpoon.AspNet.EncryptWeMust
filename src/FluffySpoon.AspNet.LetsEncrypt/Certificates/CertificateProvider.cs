@@ -52,7 +52,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
             var persistedSiteCertificate = await _persistenceService.GetPersistedSiteCertificateAsync();
             if (_certificateValidator.IsCertificateValid(persistedSiteCertificate))
             {
-                _logger.LogInformation("A persisted non-expired LetsEncrypt certificate was found and will be used.");
+                _logger.LogInformation("A persisted non-expired LetsEncrypt certificate was found and will be used: {Thumbprint}", persistedSiteCertificate.Thumbprint);
                 return new CertificateRenewalResult(persistedSiteCertificate, CertificateRenewalStatus.LoadedFromStore);
             }
 			

@@ -34,5 +34,10 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 		{
 			return Task.FromResult(_challenges);
 		}
+
+		public override string ToString()
+		{
+			return $"MemoryChallengePersistence: Content {string.Join(",", _challenges)}";
+		}
 	}
 }
