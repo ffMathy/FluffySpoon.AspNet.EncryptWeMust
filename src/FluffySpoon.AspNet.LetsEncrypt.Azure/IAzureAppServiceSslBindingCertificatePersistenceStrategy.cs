@@ -3,9 +3,7 @@ using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 {
-	public interface IAzureAppServiceSslBindingCertificatePersistenceStrategy
+	public interface IAzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
-		Task PersistAsync(CertificateType persistenceType, byte[] bytes);
-		Task<byte[]> RetrieveAsync(CertificateType persistenceType);
 	}
 }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -95,7 +96,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             var finalizationTimeout = await Task.WhenAny(Task.Delay(10000, _fakeClient.OrderFinalizedCts.Token));
             Assert.IsTrue(finalizationTimeout.IsCanceled, "Fake LE client finalization timed out");
 
-            var appCert = LetsEncryptRenewalService.Certificate.RawData;
+            var appCert = ((LetsEncryptX509Certificate)LetsEncryptRenewalService.Certificate).RawData;
             var fakeCert = FakeLetsEncryptClient.FakeCert.RawData;
             
             Assert.IsTrue(appCert.SequenceEqual(fakeCert), "Certificates do not match");
@@ -103,7 +104,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
         
         private class FakeLetsEncryptClient : ILetsEncryptClient
         {
-            public static readonly X509Certificate2 FakeCert = SelfSignedCertificate.Make(DateTime.Now, DateTime.Now.AddDays(90));
+            public static readonly LetsEncryptX509Certificate FakeCert = SelfSignedCertificate.Make(DateTime.Now, DateTime.Now.AddDays(90));
             
             public CancellationTokenSource OrderPlacedCts { get; }
             public CancellationTokenSource OrderFinalizedCts { get; }

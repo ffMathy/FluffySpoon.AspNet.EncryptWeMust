@@ -5,6 +5,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
 {
     public interface ICertificateProvider
     {
-        Task<CertificateRenewalResult> RenewCertificateIfNeeded(X509Certificate2 current = null);
+        Task<CertificateRenewalResult> RenewCertificateIfNeeded(IAbstractCertificate current = null);
     }
 }

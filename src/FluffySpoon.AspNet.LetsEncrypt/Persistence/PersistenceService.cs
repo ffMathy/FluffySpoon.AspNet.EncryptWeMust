@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -38,14 +37,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task PersistAccountCertificateAsync(IKey certificate)
 		{
-			var text = certificate.ToPem();
-			var bytes = Encoding.UTF8.GetBytes(text);
-			await PersistCertificateAsync(CertificateType.Account, bytes, _certificatePersistenceStrategies);
+			await PersistCertificateAsync(CertificateType.Account, new AccountKeyCertificate(certificate), _certificatePersistenceStrategies);
 		}
 
-		public async Task PersistSiteCertificateAsync(byte[] rawCertificate)
+		public async Task PersistSiteCertificateAsync(IPersistableCertificate certificate)
 		{
-			await PersistCertificateAsync(CertificateType.Site, rawCertificate, _certificatePersistenceStrategies);
+			await PersistCertificateAsync(CertificateType.Site, certificate, _certificatePersistenceStrategies);
 			_logger.LogInformation("Certificate persisted for later use.");
 		}
 
@@ -68,11 +65,12 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			return dnsName;
 		}
 
-		private async Task PersistCertificateAsync(CertificateType persistenceType, byte[] bytes, IEnumerable<ICertificatePersistenceStrategy> strategies) 
+		private async Task PersistCertificateAsync(CertificateType persistenceType, IPersistableCertificate certificate,
+			IEnumerable<ICertificatePersistenceStrategy> strategies) 
 		{
 			_logger.LogTrace("Persisting {type} certificate through strategies", persistenceType);
 
-			var tasks = strategies.Select(x => x.PersistAsync(persistenceType, bytes ?? new byte[0]));
+			var tasks = strategies.Select(x => x.PersistAsync(persistenceType, certificate));
 			await Task.WhenAll(tasks);
 		}
 
@@ -91,23 +89,32 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			await Task.WhenAll(tasks);
 		}
 
-		public async Task<X509Certificate2> GetPersistedSiteCertificateAsync()
+		public async Task<IAbstractCertificate> GetPersistedSiteCertificateAsync()
 		{
-			var bytes = await GetPersistedCertificateBytesAsync(CertificateType.Site, _certificatePersistenceStrategies);
-			if (bytes == null)
-				return null;
+			foreach (var strategy in _certificatePersistenceStrategies)
+			{
+				var certificate = await strategy.RetrieveSiteCertificateAsync();
+				if (certificate != null)
+					return certificate;
+			}
 
-			return new X509Certificate2(bytes, nameof(FluffySpoon));
+			_logger.LogTrace("Did not find site certificate with strategies {strategies}.", string.Join(",", _certificatePersistenceStrategies));
+			return null;
 		}
 
 		public async Task<IKey> GetPersistedAccountCertificateAsync()
 		{
-			var bytes = await GetPersistedCertificateBytesAsync(CertificateType.Account, _certificatePersistenceStrategies);
-			if (bytes == null)
-				return null;
+			foreach (var strategy in _certificatePersistenceStrategies)
+			{
+				var certificate = await strategy.RetrieveAccountCertificateAsync();
+				if (certificate != null)
+				{
+					return certificate.Key;
+				}
+			}
 
-			var text = Encoding.UTF8.GetString(bytes);
-			return KeyFactory.FromPem(text);
+			_logger.LogTrace("Did not find account certificate with strategies {strategies}.", string.Join(",", _certificatePersistenceStrategies));
+			return null;
 		}
 
 		public async Task<ChallengeDto[]> GetPersistedChallengesAsync()
@@ -133,20 +140,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			}
 
 			return result;
-		}
-
-		private async Task<byte[]> GetPersistedCertificateBytesAsync(CertificateType persistenceType, IEnumerable<ICertificatePersistenceStrategy> strategies)
-		{
-			foreach (var strategy in strategies)
-			{
-				var bytes = await strategy.RetrieveAsync(persistenceType);
-				if (bytes != null && bytes.Length > 0)
-					return bytes;
-			}
-
-			_logger.LogTrace("Did not find certificate of type {type} with strategies {strategies}.", persistenceType, string.Join(",", strategies));
-
-			return null;
 		}
 
 		private async Task DeleteChallengesAsync(IEnumerable<ChallengeDto> challenges, IEnumerable<IChallengePersistenceStrategy> strategies)

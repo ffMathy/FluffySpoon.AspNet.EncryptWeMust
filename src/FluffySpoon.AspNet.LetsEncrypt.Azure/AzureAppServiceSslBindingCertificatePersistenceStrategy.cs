@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
@@ -18,7 +18,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 	public class AzureAppServiceSslBindingCertificatePersistenceStrategy : ICertificatePersistenceStrategy, IAzureAppServiceSslBindingCertificatePersistenceStrategy
 	{
 		private const string WildcardPrefix = "*.";
-		private const string AzureCertThumbprintsAppSettingName = "WEBSITE_LOAD_CERTIFICATES";
 
 		private readonly AzureOptions _azureOptions;
 		private readonly LetsEncryptOptions _letsEncryptOptions;
@@ -56,7 +55,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 			return Azure.Authenticate(_azureOptions.Credentials).WithDefaultSubscription();
 		}
 
-		private bool DoesDomainMatch(string boundDomain, string certificateDomain) {
+		private bool DoesDomainMatch(string boundDomain, string certificateDomain) 
+		{
 			if (certificateDomain.StartsWith(WildcardPrefix))
 			{
 				var regexPattern = ConstructWildcardDomainMatchingRegularExpression(certificateDomain);
@@ -86,9 +86,9 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 			return boundDomains.Any(boundDomain => DoesDomainMatch(boundDomain, certificateDomains));
 		}
 
-		public async Task PersistAsync(CertificateType persistenceType, byte[] bytes)
+		public async Task PersistAsync(CertificateType persistenceType, IPersistableCertificate certificate)
 		{
-			if (bytes.Length == 0)
+			if (certificate.RawData.Length == 0)
 			{
 				_logger.LogWarning("Tried to persist empty certificate.");
 				return;
@@ -147,14 +147,20 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 		
 			_logger.LogInformation("Found region name to use to use for new certificate: {RegionName}", regionName);
 
-			IAppServiceCertificate newCertificate = await CreateOrUpdateCertificateAsync(bytes, regionName);
+			IAppServiceCertificate newCertificate = await CreateOrUpdateCertificateAsync(certificate.RawData, regionName);
 
 			foreach (var appTuple in relevantApps)
 			{
-				await UpdateSingleApp(appTuple, newCertificate, domains);
+				await UpdateAppBindingsAsync(appTuple, newCertificate, domains);
 			}
 
 			await DeleteOldCertificatesAsync(newCertificate);
+		}
+
+		public Task<IKeyCertificate> RetrieveAccountCertificateAsync()
+		{
+			_logger.LogTrace("Azure persistence do not store account certificates");
+			return Task.FromResult<IKeyCertificate>(null);
 		}
 
 		/// <summary>
@@ -214,7 +220,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 		{
 			var certificateName = TagName + "_" + Guid.NewGuid();
 			
-			_logger.LogInformation("Creating new Azure certificate with name {CertificateName}", certificateName);
+			_logger.LogInformation("Creating new Azure certificate with name {CertificateName} in resource group {ResourceGroupName}, region {Region}.", 
+				certificateName, _azureOptions.ResourceGroupName, regionName);
 
 			IAppServiceCertificate azureCertificate = await _client.WebApps.Manager
 				.AppServiceCertificates
@@ -248,17 +255,6 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 			return azureCertificate;
 		}
 
-		/// <summary>
-		/// Update the bindings and the app settings for a single application instance 
-		/// </summary>
-		private async Task UpdateSingleApp(AzureAppInstance appInstance, 
-			IAppServiceCertificate azureCertificate,
-			string[] domains)
-		{
-			await UpdateAppBindingsAsync(appInstance, azureCertificate, domains);
-
-			await UpdateAppSettingsAsync(appInstance, azureCertificate);
-		}
 
 		private async Task UpdateAppBindingsAsync(AzureAppInstance appInstance, 
 			IAppServiceCertificate azureCertificate, 
@@ -296,72 +292,23 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 				}
 			}
 		}
-
-		/// <summary>
-		/// In order to be able to use the Windows certificate store mechanism for loading X509 certificates,
-		/// we need to have the certificate thumbprint included in the WEBSITE_LOAD_CERTIFICATES environment variable
-		///
-		/// As it stands, there's possibly a problem with this code never removing thumbprints from this variable
-		/// which may cause some kind of problem eventually.  Maybe we should prune thumbprints out of this
-		/// if they correspond to certificates which are not loaded in Azure at all, though there may be
-		/// all sorts of permission problems there...
-		/// </summary>
-		private async Task UpdateAppSettingsAsync(AzureAppInstance appInstance, IAppServiceCertificate azureCertificate)
-		{
-			_logger.LogDebug("Getting app settings for {Name}", appInstance.DisplayName);
-
-			var appSettings = await appInstance.GetAppSettings(); 
-		
-			var loadCertificatesSetting = appSettings.ContainsKey(AzureCertThumbprintsAppSettingName)
-				? appSettings[AzureCertThumbprintsAppSettingName].Value
-				: String.Empty;
-			var certThumbprintsToLoad =
-				loadCertificatesSetting.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToList();
-			if (!certThumbprintsToLoad.Contains(azureCertificate.Thumbprint))
-			{
-				_logger.LogInformation("Adding certificate thumbprint {Thumbprint} to app setting name {AppSettingName}",
-					azureCertificate.Thumbprint,
-					AzureCertThumbprintsAppSettingName);
-
-				certThumbprintsToLoad.Add(azureCertificate.Thumbprint);
-
-				loadCertificatesSetting = String.Join(",", certThumbprintsToLoad);
-
-				try
-				{
-					await appInstance.UpdateAppSettingAsync(AzureCertThumbprintsAppSettingName, loadCertificatesSetting);
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, "Error updating app settings for {Name}", appInstance.DisplayName);
-				}
-			}
-		}
 		
 		private bool DoesBindingNeedUpdating(HostNameBindingInner existingBinding, string certificateThumbprint)
 		{
 			return existingBinding == null || existingBinding.SslState != SslState.SniEnabled || existingBinding.Thumbprint != certificateThumbprint;
 		}
 
-		public async Task<byte[]> RetrieveAsync(CertificateType certificateType)
+		public async Task<IAbstractCertificate> RetrieveSiteCertificateAsync()
 		{
-			var certificate = await GetExistingCertificateAsync(certificateType);
+			var certificate = await GetExistingCertificateAsync(CertificateType.Site);
 
 			if (certificate == null)
 			{
-				_logger.LogInformation("Certificate of type {CertificateType} not found.", certificateType);
+				_logger.LogInformation("Azure site certificate not found.");
 				return null;
 			}
 
-			var pfxBlob = certificate.GetRawCertData();
-
-			if (pfxBlob == null || pfxBlob.Length == 0)
-			{
-				_logger.LogError("Certificate was found (thumbprint {Thumbprint}), but PfxBlob was null or 0 length.", certificate.Thumbprint);
-				return null;
-			}
-
-			return pfxBlob;
+			return certificate;
 		}
 
 		/// <summary>
@@ -406,7 +353,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 
 			if (!result.Any())
 			{
-				_logger.LogWarning("Could not find any matching Azure certificates.");
+				_logger.LogInformation("Did not find any matching Azure certificates.");
 			}
 
 			return result;
@@ -421,48 +368,14 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Azure
 				return certificateType.ToString();
 		}
 
-		private async Task<X509Certificate2> GetExistingCertificateAsync(CertificateType persistenceType)
+		private async Task<IAbstractCertificate> GetExistingCertificateAsync(CertificateType persistenceType)
 		{
 			var azureCert = await GetExistingAzureCertificateAsync(persistenceType);
 
 			if (azureCert == null)
 				return null;
 			
-			_logger.LogTrace("Looking for X509 cert with thumbprint {Thumbprint}", azureCert.Thumbprint);
-
-
-			var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-			certStore.Open(OpenFlags.ReadOnly);
-
-			try
-			{
-				foreach (var cert in certStore.Certificates)
-				{
-					_logger.LogTrace("Considering X509 cert {Certificate}", cert);
-				}
-
-				var certCollection = certStore.Certificates.Find(
-											X509FindType.FindByThumbprint,
-											// Replace below with your certificate's thumbprint
-											azureCert.Thumbprint,
-											false);
-
-				// Get the first cert with the thumbprint
-				if (certCollection.Count > 0)
-				{
-					_logger.LogTrace("Found X509 cert with correct thumbprint {Thumbprint}", azureCert.Thumbprint);
-					var cert = certCollection[0];
-					return cert;
-				}
-			}
-			finally
-			{
-				certStore.Close();
-			}
-
-			_logger.LogWarning("Could not load X509Certificate for existing Azure certificate thumbprint {Thumbprint} - does WEBSITE_LOAD_CERTIFICATES correctly contain this thumbprint?", azureCert.Thumbprint);
-
-			return null;
+			return new AzureCertificate(azureCert);
 		}
 	}
 }

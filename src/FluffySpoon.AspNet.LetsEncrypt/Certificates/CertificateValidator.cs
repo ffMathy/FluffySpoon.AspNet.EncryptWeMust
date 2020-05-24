@@ -8,7 +8,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
 {
     public interface ICertificateValidator
     {
-        bool IsCertificateValid(X509Certificate2 certificate);
+        bool IsCertificateValid(IAbstractCertificate certificate);
     }
     
     public class CertificateValidator : ICertificateValidator
@@ -24,7 +24,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
             _logger = logger;
         }
 
-        public bool IsCertificateValid(X509Certificate2 certificate)
+        public bool IsCertificateValid(IAbstractCertificate certificate)
         {
             try
             {
