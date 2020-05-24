@@ -20,7 +20,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 					_siteCertificate = certificate;
 					break;
 				default:
-					throw new ArgumentException("Unhandled persitence type", nameof(persistenceType));
+					throw new ArgumentException("Unhandled persistence type", nameof(persistenceType));
 			}
 			return Task.CompletedTask;
 		}

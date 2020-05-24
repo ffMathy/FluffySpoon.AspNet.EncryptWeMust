@@ -24,12 +24,22 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 
 		public async Task<IKeyCertificate> RetrieveAccountCertificateAsync()
 		{
-			return new AccountKeyCertificate(await retrieveAsync(CertificateType.Account));
+			byte[] bytes = await retrieveAsync(CertificateType.Account);
+			if (bytes == null)
+			{
+				return null;
+			}
+			return new AccountKeyCertificate(bytes);
 		}
 
 		public async Task<IAbstractCertificate> RetrieveSiteCertificateAsync()
 		{
-			return new LetsEncryptX509Certificate(await retrieveAsync(CertificateType.Site));
+			byte[] bytes = await retrieveAsync(CertificateType.Account);
+			if (bytes == null)
+			{
+				return null;
+			}
+			return new LetsEncryptX509Certificate(bytes);
 		}
 	}
 }

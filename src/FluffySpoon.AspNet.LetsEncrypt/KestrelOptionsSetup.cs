@@ -28,7 +28,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt
                     o.ServerCertificateSelector = (_a, _b) => x509Certificate.GetCertificate();
                 });
             }
-            else
+            else if(LetsEncryptRenewalService.Certificate != null)
             {
                 _logger.LogError("This certificate cannot be used with Kestrel");
             }

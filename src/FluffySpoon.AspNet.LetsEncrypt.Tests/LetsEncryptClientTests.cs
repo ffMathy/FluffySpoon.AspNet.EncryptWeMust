@@ -127,7 +127,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             
             LetsEncryptClient.FinalizeOrder(placedOrder).Returns(Task.FromResult(new PfxCertificate(newCertBytes)));
 
-            IPersistableCertificate newCertificate = new LetsEncryptX509Certificate(newCertBytes);
+            var newCertificate = new LetsEncryptX509Certificate(newCertBytes) as IPersistableCertificate;
             PersistenceService.PersistSiteCertificateAsync(newCertificate).Returns(Task.CompletedTask);
             
             // act
