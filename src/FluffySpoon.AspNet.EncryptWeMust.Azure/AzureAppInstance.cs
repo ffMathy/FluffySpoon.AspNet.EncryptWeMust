@@ -4,7 +4,7 @@ using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.EncryptWeMust.Azure
 {
     /// <summary>
     /// A reference to an Azure app, which might be either a simple app, or a deployment slot

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.DistributedCache
+namespace FluffySpoon.AspNet.EncryptWeMust.DistributedCache
 {
 	public class DistributedCacheChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{

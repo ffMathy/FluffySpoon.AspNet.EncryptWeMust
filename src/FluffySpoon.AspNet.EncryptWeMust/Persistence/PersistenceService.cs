@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	public enum CertificateType {
 		Account,

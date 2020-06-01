@@ -1,7 +1,7 @@
 using Certes.Acme;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
     public class PlacedOrder
     {

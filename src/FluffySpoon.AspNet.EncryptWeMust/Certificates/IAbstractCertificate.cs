@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
+namespace FluffySpoon.AspNet.EncryptWeMust.Certificates
 {
     /// <summary>
     /// The most generic form of certificate, metadata provision only

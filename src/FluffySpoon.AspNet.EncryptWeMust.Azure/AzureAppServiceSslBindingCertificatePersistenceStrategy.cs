@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.EncryptWeMust.Azure
 {
     using Azure = Microsoft.Azure.Management.Fluent.Azure;
 

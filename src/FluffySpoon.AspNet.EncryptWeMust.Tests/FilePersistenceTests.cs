@@ -3,11 +3,11 @@ using System.IO;
 using System.Threading.Tasks;
 using Certes;
 using FluentAssertions;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     [TestClass]
     public class FileCertificatePersistence

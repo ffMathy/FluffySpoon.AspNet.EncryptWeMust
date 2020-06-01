@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Exceptions
+namespace FluffySpoon.AspNet.EncryptWeMust.Exceptions
 {
 	class OrderInvalidException : Exception
 	{

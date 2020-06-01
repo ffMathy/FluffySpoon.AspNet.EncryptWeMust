@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
+namespace FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample
 {
 	public class Certificate
 	{

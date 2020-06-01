@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     [TestClass]
     public class LetsEncryptChallengeApprovalMiddlewareMiddlewareTests

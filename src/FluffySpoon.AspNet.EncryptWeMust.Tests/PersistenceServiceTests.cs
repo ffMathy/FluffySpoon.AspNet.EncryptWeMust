@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
-using FluffySpoon.AspNet.LetsEncrypt.Tests;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Tests;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.EncryptWeMust.Azure
 {
     [TestClass]
     public class PersistenceServiceTests

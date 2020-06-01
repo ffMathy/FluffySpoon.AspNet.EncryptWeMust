@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	class MemoryCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{

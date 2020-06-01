@@ -1,11 +1,11 @@
-﻿using FluffySpoon.AspNet.LetsEncrypt.Azure;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+﻿using FluffySpoon.AspNet.EncryptWeMust.Azure;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.EncryptWeMust
 {
 	public static class RegistrationExtensions
 	{

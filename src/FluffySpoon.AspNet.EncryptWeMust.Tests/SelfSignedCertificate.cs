@@ -1,9 +1,9 @@
 using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     public static class SelfSignedCertificate
     {

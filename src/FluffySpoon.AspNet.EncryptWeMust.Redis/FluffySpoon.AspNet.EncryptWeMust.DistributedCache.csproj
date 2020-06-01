@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FluffySpoon.AspNet.LetsEncrypt\FluffySpoon.AspNet.LetsEncrypt.csproj" />
+    <ProjectReference Include="..\FluffySpoon.AspNet.EncryptWeMust\FluffySpoon.AspNet.EncryptWeMust.csproj" />
   </ItemGroup>
 
 </Project>

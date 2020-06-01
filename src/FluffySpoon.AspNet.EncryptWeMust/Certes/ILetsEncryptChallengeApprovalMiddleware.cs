@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
 	public interface ILetsEncryptChallengeApprovalMiddleware
 	{

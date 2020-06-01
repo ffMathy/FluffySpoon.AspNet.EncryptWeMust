@@ -1,4 +1,4 @@
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
     public class PfxCertificate
     {

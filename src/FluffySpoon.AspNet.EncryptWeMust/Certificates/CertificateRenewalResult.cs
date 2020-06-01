@@ -1,4 +1,4 @@
-namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
+namespace FluffySpoon.AspNet.EncryptWeMust.Certificates
 {
     public class CertificateRenewalResult
     {

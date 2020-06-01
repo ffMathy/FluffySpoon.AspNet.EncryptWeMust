@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	public interface IPersistenceService
 	{

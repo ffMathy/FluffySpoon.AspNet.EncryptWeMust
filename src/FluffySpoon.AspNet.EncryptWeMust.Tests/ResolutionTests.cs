@@ -1,13 +1,13 @@
 using System;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     [TestClass]
     public class ResolutionTests

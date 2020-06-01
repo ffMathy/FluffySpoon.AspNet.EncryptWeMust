@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
     public class LetsEncryptChallengeApprovalMiddleware : ILetsEncryptChallengeApprovalMiddleware
     {

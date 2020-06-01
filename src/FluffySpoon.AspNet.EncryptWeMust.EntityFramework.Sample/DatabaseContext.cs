@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample
+namespace FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample
 {
 	public class DatabaseContext : DbContext
 	{

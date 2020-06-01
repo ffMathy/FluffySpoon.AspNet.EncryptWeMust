@@ -1,6 +1,6 @@
 ﻿using Certes;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
+namespace FluffySpoon.AspNet.EncryptWeMust.Certificates
 {
     /// <summary>
     /// A certificate which can be persisted as a stream of bytes

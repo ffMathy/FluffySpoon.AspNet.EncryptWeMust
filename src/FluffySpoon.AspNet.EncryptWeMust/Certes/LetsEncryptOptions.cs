@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Certes;
 using Certes.Acme;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
 	public class LetsEncryptOptions
 	{

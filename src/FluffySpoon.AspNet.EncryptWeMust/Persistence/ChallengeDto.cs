@@ -1,4 +1,4 @@
-﻿namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+﻿namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	public class ChallengeDto
 	{

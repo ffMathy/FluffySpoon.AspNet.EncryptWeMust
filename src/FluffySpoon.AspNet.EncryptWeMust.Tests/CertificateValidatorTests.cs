@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     [TestClass]
     public class CertificateValidatorTests

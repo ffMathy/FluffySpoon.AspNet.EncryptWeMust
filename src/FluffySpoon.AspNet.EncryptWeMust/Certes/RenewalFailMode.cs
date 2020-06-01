@@ -1,4 +1,4 @@
-﻿namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+﻿namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
 	/// <summary>
 	/// Defines the ways errors are handle by the <see cref="ILetsEncryptRenewalService" />.

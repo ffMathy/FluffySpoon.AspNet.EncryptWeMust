@@ -6,15 +6,15 @@ using Certes;
 using Certes.Acme;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
-using static FluffySpoon.AspNet.LetsEncrypt.Certificates.CertificateRenewalStatus;
+using static FluffySpoon.AspNet.EncryptWeMust.Certificates.CertificateRenewalStatus;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Tests
+namespace FluffySpoon.AspNet.EncryptWeMust.Tests
 {
     [TestClass]
     public class LetsEncryptClientTests

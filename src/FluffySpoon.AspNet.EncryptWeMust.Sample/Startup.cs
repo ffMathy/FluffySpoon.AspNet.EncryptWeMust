@@ -1,12 +1,12 @@
 ﻿using System;
 using Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Sample
+namespace FluffySpoon.AspNet.EncryptWeMust.Sample
 {
 	public class Startup
 	{

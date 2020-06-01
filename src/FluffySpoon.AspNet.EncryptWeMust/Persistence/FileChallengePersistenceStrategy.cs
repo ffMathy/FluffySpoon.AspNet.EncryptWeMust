@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	public class FileChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{

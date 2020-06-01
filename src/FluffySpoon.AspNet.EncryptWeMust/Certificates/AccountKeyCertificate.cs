@@ -2,7 +2,7 @@
 using System.Text;
 using Certes;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
+namespace FluffySpoon.AspNet.EncryptWeMust.Certificates
 {
     /// <summary>
     /// The type of certificate used to store a Let's Encrypt account key

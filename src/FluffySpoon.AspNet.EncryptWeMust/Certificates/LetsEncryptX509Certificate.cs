@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
+namespace FluffySpoon.AspNet.EncryptWeMust.Certificates
 {
     public class LetsEncryptX509Certificate : IPersistableCertificate
     {

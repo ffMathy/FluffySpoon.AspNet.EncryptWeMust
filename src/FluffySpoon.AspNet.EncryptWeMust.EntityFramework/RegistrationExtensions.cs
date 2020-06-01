@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.EntityFramework
+namespace FluffySpoon.AspNet.EncryptWeMust.EntityFramework
 {
 	public static class RegistrationExtensions
 	{

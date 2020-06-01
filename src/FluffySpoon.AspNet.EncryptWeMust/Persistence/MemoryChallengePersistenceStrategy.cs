@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	class MemoryChallengePersistenceStrategy : IChallengePersistenceStrategy
 	{

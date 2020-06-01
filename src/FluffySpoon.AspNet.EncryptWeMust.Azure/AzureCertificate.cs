@@ -1,8 +1,8 @@
 ﻿using System;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 using Microsoft.Azure.Management.AppService.Fluent;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Azure
+namespace FluffySpoon.AspNet.EncryptWeMust.Azure
 {
     /// <summary>
     /// The representation of the kind of metadata-only certificate which Azure Appservices can provide via the API

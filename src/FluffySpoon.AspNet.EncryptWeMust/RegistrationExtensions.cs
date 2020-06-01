@@ -1,20 +1,20 @@
-﻿using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+﻿using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.EncryptWeMust.Certes;
+using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Options;
 
 using System.Runtime.CompilerServices;
-[assembly:InternalsVisibleTo("FluffySpoon.AspNet.LetsEncrypt.Tests")]
+[assembly:InternalsVisibleTo("FluffySpoon.AspNet.EncryptWeMust.Tests")]
 
 // ReSharper disable once CheckNamespace
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.EncryptWeMust
 {
 	public static class RegistrationExtensions
 	{

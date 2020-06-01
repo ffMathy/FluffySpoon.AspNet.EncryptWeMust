@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
+namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {
 	public delegate Task PersistChallengesDelegate(IEnumerable<ChallengeDto> challenges);
 	public delegate Task DeleteChallengesDelegate(IEnumerable<ChallengeDto> challenges);

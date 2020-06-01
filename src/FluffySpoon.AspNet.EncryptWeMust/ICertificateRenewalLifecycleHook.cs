@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace FluffySpoon.AspNet.LetsEncrypt
+namespace FluffySpoon.AspNet.EncryptWeMust
 {
 	public interface ICertificateRenewalLifecycleHook
 	{

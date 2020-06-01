@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
-using FluffySpoon.AspNet.LetsEncrypt.Exceptions;
-using FluffySpoon.AspNet.LetsEncrypt.Persistence;
+using FluffySpoon.AspNet.EncryptWeMust.Exceptions;
+using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Extensions.Logging;
 
-namespace FluffySpoon.AspNet.LetsEncrypt.Certes
+namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 {
     public interface ILetsEncryptClient
     {
