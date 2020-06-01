@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29512.175
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.Sample", "FluffySpoon.AspNet.LetsEncrypt.Sample\FluffySpoon.AspNet.LetsEncrypt.Sample.csproj", "{C93D8460-D7DA-4372-A156-61D3F51AA5D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.Sample", "FluffySpoon.AspNet.EncryptWeMust.Sample\FluffySpoon.AspNet.EncryptWeMust.Sample.csproj", "{C93D8460-D7DA-4372-A156-61D3F51AA5D4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.csproj", "{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.EntityFramework", "FluffySpoon.AspNet.EncryptWeMust.EntityFramework\FluffySpoon.AspNet.EncryptWeMust.EntityFramework.csproj", "{4F5A6D2E-3A10-431A-AF51-6F81BDFC88D0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample", "FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample\FluffySpoon.AspNet.LetsEncrypt.EntityFramework.Sample.csproj", "{7796E6C9-4CB8-4F8E-8E41-357884B9C138}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample", "FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample\FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample.csproj", "{7796E6C9-4CB8-4F8E-8E41-357884B9C138}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.DistributedCache", "FluffySpoon.AspNet.LetsEncrypt.Redis\FluffySpoon.AspNet.LetsEncrypt.DistributedCache.csproj", "{EDE58C35-D2E1-4AB4-9F67-1263FD027C76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.DistributedCache", "FluffySpoon.AspNet.EncryptWeMust.Redis\FluffySpoon.AspNet.EncryptWeMust.DistributedCache.csproj", "{EDE58C35-D2E1-4AB4-9F67-1263FD027C76}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.Azure", "FluffySpoon.AspNet.LetsEncrypt.Azure\FluffySpoon.AspNet.LetsEncrypt.Azure.csproj", "{BE99D2D2-59F3-4709-9754-9008F94FA862}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.Azure", "FluffySpoon.AspNet.EncryptWeMust.Azure\FluffySpoon.AspNet.EncryptWeMust.Azure.csproj", "{BE99D2D2-59F3-4709-9754-9008F94FA862}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt", "FluffySpoon.AspNet.LetsEncrypt\FluffySpoon.AspNet.LetsEncrypt.csproj", "{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust", "FluffySpoon.AspNet.EncryptWeMust\FluffySpoon.AspNet.EncryptWeMust.csproj", "{A9D071D3-B82E-45C7-8480-D6EA7F8C6F41}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.LetsEncrypt.Tests", "FluffySpoon.AspNet.LetsEncrypt.Tests\FluffySpoon.AspNet.LetsEncrypt.Tests.csproj", "{C9071FEE-4116-474F-B2B1-61766EAE0907}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluffySpoon.AspNet.EncryptWeMust.Tests", "FluffySpoon.AspNet.EncryptWeMust.Tests\FluffySpoon.AspNet.EncryptWeMust.Tests.csproj", "{C9071FEE-4116-474F-B2B1-61766EAE0907}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
