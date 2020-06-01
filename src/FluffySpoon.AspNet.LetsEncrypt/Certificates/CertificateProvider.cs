@@ -39,7 +39,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
             _logger = logger;
         }
 
-        public async Task<CertificateRenewalResult> RenewCertificateIfNeeded(X509Certificate2 current = null)
+        public async Task<CertificateRenewalResult> RenewCertificateIfNeeded(IAbstractCertificate current = null)
         {
             _logger.LogInformation("Checking to see if in-memory LetsEncrypt certificate needs renewal.");
             if (_certificateValidator.IsCertificateValid(current))
@@ -61,7 +61,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
             return new CertificateRenewalResult(newCertificate, CertificateRenewalStatus.Renewed);
         }
         
-        private async Task<X509Certificate2> RequestNewLetsEncryptCertificate()
+        private async Task<IAbstractCertificate> RequestNewLetsEncryptCertificate()
         {
             var client = await _clientFactory.GetClient();
 
@@ -73,11 +73,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certificates
             {
                 var pfxCertificateBytes = await client.FinalizeOrder(placedOrder);
 
-                await _persistenceService.PersistSiteCertificateAsync(pfxCertificateBytes.Bytes);
+                await _persistenceService.PersistSiteCertificateAsync(new LetsEncryptX509Certificate(pfxCertificateBytes.Bytes));
 
                 const string password = nameof(FluffySpoon);
 				
-                return new X509Certificate2(pfxCertificateBytes.Bytes, password);
+                return new LetsEncryptX509Certificate(pfxCertificateBytes.Bytes);
             }
             finally
             {

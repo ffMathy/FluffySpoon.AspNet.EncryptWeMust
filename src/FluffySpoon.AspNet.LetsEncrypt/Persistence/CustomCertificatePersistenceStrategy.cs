@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
-	public class CustomCertificatePersistenceStrategy: ICertificatePersistenceStrategy
+	public class CustomCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
 		private readonly Func<CertificateType, byte[], Task> persistAsync;
 		private readonly Func<CertificateType, Task<byte[]>> retrieveAsync;
@@ -16,14 +17,29 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			this.retrieveAsync = retrieveAsync;
 		}
 
-		public Task PersistAsync(CertificateType persistenceType, byte[] bytes)
+		public Task PersistAsync(CertificateType persistenceType, IPersistableCertificate certificate)
 		{
-			return persistAsync(persistenceType, bytes);
+			return persistAsync(persistenceType, certificate.RawData);
 		}
 
-		public Task<byte[]> RetrieveAsync(CertificateType persistenceType)
+		public async Task<IKeyCertificate> RetrieveAccountCertificateAsync()
 		{
-			return retrieveAsync(persistenceType);
+			byte[] bytes = await retrieveAsync(CertificateType.Account);
+			if (bytes == null)
+			{
+				return null;
+			}
+			return new AccountKeyCertificate(bytes);
+		}
+
+		public async Task<IAbstractCertificate> RetrieveSiteCertificateAsync()
+		{
+			byte[] bytes = await retrieveAsync(CertificateType.Account);
+			if (bytes == null)
+			{
+				return null;
+			}
+			return new LetsEncryptX509Certificate(bytes);
 		}
 	}
 }

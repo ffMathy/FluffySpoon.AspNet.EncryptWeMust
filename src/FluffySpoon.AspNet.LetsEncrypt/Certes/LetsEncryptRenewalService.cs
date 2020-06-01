@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.LetsEncrypt.Certificates;
+using FluffySpoon.AspNet.LetsEncrypt.Persistence;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using static FluffySpoon.AspNet.LetsEncrypt.Certificates.CertificateRenewalStatus;
@@ -36,7 +37,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 			_semaphoreSlim = new SemaphoreSlim(1);
 		}
 
-		internal static X509Certificate2 Certificate { get; private set; }
+		internal static IAbstractCertificate Certificate { get; private set; }
 		
 		public Uri LetsEncryptUri => _options.LetsEncryptUri;
 		
@@ -90,13 +91,17 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Certes
 						}
 					};
 
-					if (chain.Build(result.Certificate))
+					if (result.Certificate is LetsEncryptX509Certificate x509cert)
 					{
-						_logger.LogInformation("Successfully built certificate chain");
-					}
-					else
-					{
-						_logger.LogWarning("Was not able to build certificate chain. This can cause an outage of your app.");
+						if (chain.Build(x509cert.GetCertificate()))
+						{
+							_logger.LogInformation("Successfully built certificate chain");
+						}
+						else
+						{
+							_logger.LogWarning(
+								"Was not able to build certificate chain. This can cause an outage of your app.");
+						}
 					}
 				}
 

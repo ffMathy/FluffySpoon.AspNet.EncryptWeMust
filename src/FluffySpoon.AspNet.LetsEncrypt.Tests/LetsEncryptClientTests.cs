@@ -65,11 +65,11 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             Sut = sut;
         }
         
-        private static X509Certificate2 ValidCert { get; } = SelfSignedCertificate.Make(
+        private static IAbstractCertificate ValidCert { get; } = SelfSignedCertificate.Make(
             DateTime.Now, 
             DateTime.Now.AddDays(90));
         
-        private static X509Certificate2 InvalidCert { get; } = SelfSignedCertificate.Make(
+        private static IAbstractCertificate InvalidCert { get; } = SelfSignedCertificate.Make(
             DateTime.Now.Subtract(180.Days()),
             DateTime.Now.Subtract(90.Days()));
 
@@ -127,7 +127,8 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             
             LetsEncryptClient.FinalizeOrder(placedOrder).Returns(Task.FromResult(new PfxCertificate(newCertBytes)));
 
-            PersistenceService.PersistSiteCertificateAsync(newCertBytes).Returns(Task.CompletedTask);
+            var newCertificate = new LetsEncryptX509Certificate(newCertBytes) as IPersistableCertificate;
+            PersistenceService.PersistSiteCertificateAsync(newCertificate).Returns(Task.CompletedTask);
             
             // act
             
@@ -136,7 +137,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             // assert
             
             output.Status.Should().Be(Renewed);
-            output.Certificate.RawData.Should().BeEquivalentTo(newCertBytes);
+            ((LetsEncryptX509Certificate) output.Certificate).RawData.Should().BeEquivalentTo(newCertBytes);
 
             CertificateValidator.Received(1).IsCertificateValid(null);
             await PersistenceService.Received(1).GetPersistedSiteCertificateAsync();
@@ -144,7 +145,7 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Tests
             await LetsEncryptClient.Received(1).PlaceOrder(SeqEq(new[] {"test.com"}));
             await PersistenceService.Received(1).PersistChallengesAsync(dtos);
             await PersistenceService.Received(1).DeleteChallengesAsync(dtos);
-            await PersistenceService.Received(1).PersistSiteCertificateAsync(newCertBytes);
+            await PersistenceService.Received(1).PersistSiteCertificateAsync(newCertificate);
             await PersistenceService.Received(1).PersistChallengesAsync(dtos);
             await LetsEncryptClient.Received(1).FinalizeOrder(placedOrder);
             await LetsEncryptClientFactory.Received(1).GetClient();

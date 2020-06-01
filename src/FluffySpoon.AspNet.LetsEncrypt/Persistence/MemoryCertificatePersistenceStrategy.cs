@@ -1,45 +1,38 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
 	class MemoryCertificatePersistenceStrategy : ICertificatePersistenceStrategy
 	{
-		private IDictionary<CertificateType, byte[]> bytes;
+		IKeyCertificate _accountCertificate;
+		IAbstractCertificate _siteCertificate;
 
-		public MemoryCertificatePersistenceStrategy()
+		public Task PersistAsync(CertificateType persistenceType, IPersistableCertificate certificate)
 		{
-			bytes = new Dictionary<CertificateType, byte[]>();
-		}
-
-		public Task PersistAsync(CertificateType persistenceType, byte[] bytes)
-		{
-			if (this.bytes.ContainsKey(persistenceType))
+			switch (persistenceType)
 			{
-				if (bytes == null)
-				{
-					this.bytes.Remove(persistenceType);
-				}
-				else
-				{
-					this.bytes[persistenceType] = bytes;
-				}
-			} else {
-				if(bytes == null)
-					return Task.CompletedTask;
-				
-				this.bytes.Add(persistenceType, bytes);
+				case CertificateType.Account:
+					_accountCertificate = (IKeyCertificate)certificate;
+					break;
+				case CertificateType.Site:
+					_siteCertificate = certificate;
+					break;
+				default:
+					throw new ArgumentException("Unhandled persistence type", nameof(persistenceType));
 			}
-
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync(CertificateType persistenceType)
+		public Task<IKeyCertificate> RetrieveAccountCertificateAsync()
 		{
-			if(bytes.ContainsKey(persistenceType))
-				return Task.FromResult(bytes[persistenceType]);
+			return Task.FromResult(_accountCertificate);
+		}
 
-			return Task.FromResult<byte[]>(null);
+		public Task<IAbstractCertificate> RetrieveSiteCertificateAsync()
+		{
+			return Task.FromResult(_siteCertificate);
 		}
 	}
 }

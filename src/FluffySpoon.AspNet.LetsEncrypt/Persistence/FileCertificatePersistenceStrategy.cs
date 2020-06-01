@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 
 namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 {
@@ -12,26 +13,46 @@ namespace FluffySpoon.AspNet.LetsEncrypt.Persistence
 			this.relativeFilePath = relativeFilePath;
 		}
 
-		public Task PersistAsync(CertificateType persistenceType, byte[] certificateBytes)
+        public Task PersistAsync(CertificateType persistenceType, IPersistableCertificate certificate)
 		{
 			lock (typeof(FileCertificatePersistenceStrategy))
 			{
 				File.WriteAllBytes(
 					GetCertificatePath(persistenceType),
-					certificateBytes);
+                    certificate.RawData);
 			}
 
 			return Task.CompletedTask;
 		}
 
-		public Task<byte[]> RetrieveAsync(CertificateType persistenceType)
+        public async Task<IKeyCertificate> RetrieveAccountCertificateAsync()
+        {
+	        var bytes = await ReadFile(CertificateType.Account);
+	        if (bytes == null)
+	        {
+		        return null;
+	        }
+	        return new AccountKeyCertificate(bytes);
+        }
+
+        public async Task<IAbstractCertificate> RetrieveSiteCertificateAsync()
+        {
+	        var bytes = await ReadFile(CertificateType.Site);
+	        if (bytes == null)
+	        {
+		        return null;
+	        }
+	        return new LetsEncryptX509Certificate(bytes);
+        }
+
+        private async Task<byte[]> ReadFile(CertificateType persistenceType)
 		{
 			lock (typeof(FileCertificatePersistenceStrategy))
 			{
 				if (!File.Exists(GetCertificatePath(persistenceType)))
-					return Task.FromResult<byte[]>(null);
+                    return null;
 
-				return Task.FromResult(File.ReadAllBytes(GetCertificatePath(persistenceType)));
+                return File.ReadAllBytes(GetCertificatePath(persistenceType));
 			}
 		}
 
