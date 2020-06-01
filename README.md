@@ -1,6 +1,8 @@
 The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed. 
 
-`Install-Package FluffySpoon.AspNet.LetsEncrypt`
+`Install-Package FluffySpoon.AspNet.EncryptWeMust`
+
+**This project used to be called `FluffySpoon.AspNet.LetsEncrypt`, but due to a trademark claim from LetsEncrypt, we had to rename it. The name now follows Yoda Speak.**
  
 # Requirements
 - Kestrel (which is default)
