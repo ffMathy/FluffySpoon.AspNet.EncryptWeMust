@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  fluffyspoon.aspnet.encryptwemust.sample:
+    image: ${DOCKER_REGISTRY-}fluffyspoonaspnetencryptwemustsample
+    build:
+      context: .
+      dockerfile: FluffySpoon.AspNet.EncryptWeMust.Sample/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+
+  fluffyspoon.aspnet.encryptwemust.entityframework.sample:
+    image: ${DOCKER_REGISTRY-}fluffyspoonaspnetencryptwemustentityframeworksample
+    build:
+      context: .
+      dockerfile: FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample/Dockerfile
+    ports:
+      - "81:80
+      - "444:443"
