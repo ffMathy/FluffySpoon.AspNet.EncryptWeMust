@@ -1,4 +1,4 @@
 {
-  "dockerComposeYmlFilePaths": [ "src/docker-compose.yml" ],
+  "dockerComposeYmlFilePaths": [ "docker-compose.yml" ],
   "additionalPaths": ["src"] 
 }
