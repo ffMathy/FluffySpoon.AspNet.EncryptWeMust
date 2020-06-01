@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: FluffySpoon.AspNet.EncryptWeMust.Sample/Dockerfile
     ports:
-      - "80:80"
-      - "443:443"
+     - "80:80"
+     - "443:443"
 
   fluffyspoon.aspnet.encryptwemust.entityframework.sample:
     image: ${DOCKER_REGISTRY-}fluffyspoonaspnetencryptwemustentityframeworksample
@@ -16,5 +16,5 @@ services:
       context: .
       dockerfile: FluffySpoon.AspNet.EncryptWeMust.EntityFramework.Sample/Dockerfile
     ports:
-      - "81:80
-      - "444:443"
+     - "81:80
+     - "444:443"
