@@ -1,5 +1,4 @@
-﻿using FluffySpoon.AspNet.EncryptWeMust.Certes;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 

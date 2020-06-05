@@ -4,7 +4,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using FluffySpoon.AspNet.EncryptWeMust.Certificates;
-using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using static FluffySpoon.AspNet.EncryptWeMust.Certificates.CertificateRenewalStatus;

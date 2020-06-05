@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Certes;
 using FluffySpoon.AspNet.EncryptWeMust.Certificates;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace FluffySpoon.AspNet.EncryptWeMust.Persistence
 {

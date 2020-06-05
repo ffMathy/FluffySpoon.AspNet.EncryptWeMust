@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FluffySpoon.AspNet.EncryptWeMust.Persistence;
+﻿using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 
 namespace FluffySpoon.AspNet.EncryptWeMust.Azure
 {

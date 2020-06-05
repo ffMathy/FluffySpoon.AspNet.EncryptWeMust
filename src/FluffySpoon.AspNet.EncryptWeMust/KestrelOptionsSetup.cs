@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FluffySpoon.AspNet.EncryptWeMust.Certes;
+﻿using FluffySpoon.AspNet.EncryptWeMust.Certes;
 using FluffySpoon.AspNet.EncryptWeMust.Certificates;
-using FluffySpoon.AspNet.EncryptWeMust.Persistence;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
