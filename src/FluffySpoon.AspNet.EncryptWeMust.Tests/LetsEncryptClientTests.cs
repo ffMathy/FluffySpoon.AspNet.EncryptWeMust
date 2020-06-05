@@ -144,7 +144,6 @@ namespace FluffySpoon.AspNet.EncryptWeMust.Tests
             await LetsEncryptClient.Received(1).PlaceOrder(SeqEq(new[] {"test.com"}));
             await PersistenceService.Received(1).PersistChallengesAsync(dtos);
             await PersistenceService.Received(1).DeleteChallengesAsync(dtos);
-            await PersistenceService.Received(1).PersistSiteCertificateAsync(newCertificate);
             await PersistenceService.Received(1).PersistChallengesAsync(dtos);
             await LetsEncryptClient.Received(1).FinalizeOrder(placedOrder);
             await LetsEncryptClientFactory.Received(1).GetClient();
