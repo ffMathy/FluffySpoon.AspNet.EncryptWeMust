@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="bouncycastle" Version="1.8.9" />
-    <PackageReference Include="Certes" Version="2.3.3" />
+    <PackageReference Include="Certes" Version="2.3.4" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.Server.WebListener" Version="1.1.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.0" />
