@@ -1,5 +1,3 @@
-First some shameless promotion for my other project. **I'm currently building the GitHub app [Pull Dog](https://dogger.io)**, which creates a Docker-based test environment for every pull request you open, and send a link to the environment right in the pull request itself, as a comment.
-
 # What is this?
 The simplest LetsEncrypt setup for ASP .NET Core. Almost no server configuration needed. 
 
