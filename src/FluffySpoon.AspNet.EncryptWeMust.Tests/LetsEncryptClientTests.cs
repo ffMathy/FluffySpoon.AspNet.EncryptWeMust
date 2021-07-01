@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
+using Certes.Acme.Resource;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using FluffySpoon.AspNet.EncryptWeMust.Certes;
@@ -148,6 +150,58 @@ namespace FluffySpoon.AspNet.EncryptWeMust.Tests
             await LetsEncryptClient.Received(1).FinalizeOrder(placedOrder);
             await LetsEncryptClientFactory.Received(1).GetClient();
         }
+
+        [TestMethod]
+        public async Task CheckAllChallengesValidated()
+        {
+            // arrange
+
+			var PemCert = CertToPem(((LetsEncryptX509Certificate)ValidCert).GetCertificate());
+			var certChain = new CertificateChain(PemCert);
+			var readyOrder = new Order {
+				Status = OrderStatus.Ready,
+				Identifiers = new[] { new Identifier { Value = "example.com" } }
+			};
+            var validOrder = new Order { Status = OrderStatus.Valid };
+            var orderContext = Substitute.For<IOrderContext>();
+			orderContext.Resource().Returns(readyOrder);
+            orderContext.Finalize(default).ReturnsForAnyArgs(validOrder);
+            orderContext.Download().Returns(certChain);
+            
+            var validChallenge = new Challenge { Status = ChallengeStatus.Valid };
+            var pendingChallenge = new Challenge { Status = ChallengeStatus.Pending };
+            var challenge1 = Substitute.For<IChallengeContext>();
+            challenge1.Validate().Returns(validChallenge);
+            challenge1.Resource().Returns(validChallenge);
+            var challenge2 = Substitute.For<IChallengeContext>();
+            challenge2.Validate().Returns(pendingChallenge);
+            challenge2.Resource().Returns(validChallenge);
+
+            var placedOrder = new PlacedOrder(null, orderContext, new[] { challenge1, challenge2 });
+            
+            var options = new LetsEncryptOptions { CertificateSigningRequest = new CsrInfo() };
+
+            var client = new LetsEncryptClient(null, options, NullLogger.Instance);
+
+            // act
+
+            var result = await client.FinalizeOrder(placedOrder);
+
+            // assert
+
+            var cert = new LetsEncryptX509Certificate(result.Bytes);
+            PemCert.Should().Be(CertToPem(cert.GetCertificate()));
+            await challenge1.Received().Validate();
+            await challenge2.Received().Validate();
+            await challenge2.Received().Resource();
+        }
+
+        private static string CertToPem(X509Certificate2 cert)
+        {
+			return string.Concat("-----BEGIN CERTIFICATE-----\n",
+				Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks),
+				"\n-----END CERTIFICATE-----");
+		}
 
         private static T[] SeqEq<T>(T[] xs) => Arg.Is<T[]>(ys => xs.SequenceEqual(ys)); 
         private static T RefEq<T>(T it) => Arg.Is<T>(x => ReferenceEquals(x, it));
