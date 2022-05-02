@@ -106,10 +106,10 @@ namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 
             while (true)
             {
-                var anyValid = challenges.Any(x => x.Status == ChallengeStatus.Valid);
-                var allInvalid = challenges.All(x => x.Status == ChallengeStatus.Invalid);
+                var allValid = challenges.All(x => x.Status == ChallengeStatus.Valid);
+                var anyInvalid = challenges.Any(x => x.Status == ChallengeStatus.Invalid);
 				
-                if (anyValid || allInvalid)
+                if (allValid || anyInvalid)
                     break;
                 
                 await Task.Delay(1000);
