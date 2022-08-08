@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 30
+  ignore:
+  - dependency-name: Microsoft.Azure.Management.AppService.Fluent
+    versions:
+    - 1.36.1
+  - dependency-name: Microsoft.Azure.Management.Fluent
+    versions:
+    - 1.36.1
