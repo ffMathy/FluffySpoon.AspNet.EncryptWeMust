@@ -52,6 +52,12 @@ namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 		public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.ES256;
 
 		/// <summary>
+		/// Preferred Chain, when set will define up to which certificate the 
+		/// LetsEncrypt Long Chain: ISRG Root X1
+		/// </summary>
+		public string PreferredChain { get; set; } = "ISRG Root X1";
+
+		/// <summary>
 		/// Get or set a delay before the initial run of the renewal service (subsequent runs will be at 1hr intervals)
 		/// On some platform/deployment systems (e.g Azure Slot Swap) we do not want the renewal service to start immediately, because we may not
 		/// yet have incoming requests (e.g. for challenges) directed to us. 
