@@ -87,7 +87,7 @@ namespace FluffySpoon.AspNet.EncryptWeMust.Certes
 
             var keyPair = KeyFactory.NewKey(_options.KeyAlgorithm);
 			
-            var certificateChain = await order.Generate(_options.CertificateSigningRequest, keyPair);
+            var certificateChain = await order.Generate(_options.CertificateSigningRequest, keyPair, _options.PreferredChain);
 
             var pfxBuilder = certificateChain.ToPfx(keyPair);
 			
