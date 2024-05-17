@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="certes" Version="3.0.3" />
+    <PackageReference Include="certes" Version="3.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.2.0" />
